@@ -47,7 +47,7 @@ class LongTimeoutModule(BaseModule):
 
                     timeoutHours = round(float(timeoutDuration / 3600), 2)
                     timeoutItem.timeout_recent_end = timeNow + timedelta(seconds=timeoutDuration)
-                    self.bot.whisper(
+                    self.bot.whisper_login(
                         timeoutItem.timeout_author, f"Timing out {timeoutUser} for an additional {timeoutHours} hours"
                     )
                     self.bot._timeout(

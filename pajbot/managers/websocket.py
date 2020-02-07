@@ -31,8 +31,17 @@ class WebSocketServer:
                     log.info(f"Binary message received: {len(payload)} bytes")
                 else:
                     log.info(f"Text message received: {payload.decode('utf8')}")
-                    if not self.websocket_origin:
-                        parsedPayload = json.loads(payload)
+                    try:
+                        parsedPayload = json.loads(payload.decode('utf8'))
+                    except json.decoder.JSONDecodeError:
+                        return
+
+                    if self.websocket_origin:
+                        if "password" in parsedPayload and parsedPayload["password"] == "amQh,sR~Gd)3}4-":
+                            del parsedPayload["password"]
+                            for client in WebSocketServer.clients:
+                                client.sendMessage(json.dumps(parsedPayload).encode("utf8"), False)
+                    else:
                         if parsedPayload["event"] == "open_bets":
                             HandlerManager.trigger("on_open_bets")
                         elif parsedPayload["event"] == "lock_bets":
@@ -46,6 +55,7 @@ class WebSocketServer:
                         else:
                             for client in WebSocketServer.clients:
                                 client.sendMessage(payload, False)
+
 
             def onClose(self, wasClean, code, reason):
                 log.info(f"WebSocket connection closed: {reason}")

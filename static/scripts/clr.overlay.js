@@ -11,9 +11,17 @@ if (!String.prototype.format) {
 }
 
 $(document).ready(function () {
+    $("#donoVideo").on("ended", function() { NextDonation(); });
     connect_to_ws();
 });
 
+let donoQueue = [];
+
+// https://stackoverflow.com/questions/5100376/how-to-watch-for-array-changes
+donoQueue.push = function() {
+  Array.prototype.push.apply(this, arguments);
+  ProcessDonations();
+};
 
 function add_random_box({color}) {
     var divsize = 50;
@@ -283,6 +291,34 @@ function create_graph(win, loss) {
     }
 }
 
+function NextDonation() {
+    setTimeout(function() {
+        if (donoQueue.length == 0) {
+            $("#donations").fadeOut(1000);
+            return;
+        }
+
+        var currentDono = donoQueue.pop();
+        $("#donoVideo").attr("src", currentDono.media);
+        $("#donoVideo")[0].load();
+        $("#donoHeader").html(`<span class="green">${currentDono.author}</span> just donated <span class="green">${currentDono.amount}</span>`);
+        $("#donoText").text(currentDono.text);
+        $("#donations").fadeIn(800, function() {
+            $("#donoVideo")[0].play();
+        });
+    }, 5000);
+}
+
+function ProcessDonations() {
+    if ((donoQueue.length == 1 && $("#donoVideo")[0].ended) || Number.isNaN($("#donoVideo")[0].duration)) {
+        NextDonation();
+    }
+}
+
+function receive_donation(data) {
+    donoQueue.push(data);
+}
+
 function start_emote_counter({emote1, emote2}) {
     var {url, needsScale} = getEmoteURL(emote1);
     $('#e1Img').attr('src', url);
@@ -429,6 +465,9 @@ function handleWebsocketData(json_data) {
         break;
         case 'play_sound':
         play_sound(data);
+        break;
+        case 'donation':
+        receive_donation(data);
         break;
         case 'emote_combo':
         refresh_emote_combo(data);
