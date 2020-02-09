@@ -21,7 +21,7 @@ from pajbot.apiwrappers.twitch.helix import TwitchHelixAPI
 from pajbot.apiwrappers.twitch.id import TwitchIDAPI
 from pajbot.apiwrappers.twitch.kraken_v5 import TwitchKrakenV5API
 from pajbot.apiwrappers.twitch.tmi import TwitchTMIAPI
-from pajbot.constants import VERSION
+from pajbot.constants import VERSION, PASSWORD
 from pajbot.eventloop import SafeDefaultScheduler
 from pajbot.managers.command import CommandManager
 from pajbot.managers.db import DBManager
@@ -211,7 +211,7 @@ class Bot:
         self.commands = CommandManager(
             socket_manager=self.socket_manager, module_manager=self.module_manager, bot=self
         ).load()
-        self.websocket_manager = WebSocketManager(self)
+        self.websocket_manager = WebSocketManager(self, PASSWORD)
 
         HandlerManager.trigger("on_managers_loaded")
 
