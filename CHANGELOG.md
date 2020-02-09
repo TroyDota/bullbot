@@ -2,6 +2,12 @@
 
 ## Unversioned
 
+- Minor: Add ability to run P&SL lists with !runpnsl command
+- Minor: Renamed the chatter refresh module
+- Minor: Implemented required changes for [upcoming changes to the Twitch API](https://discuss.dev.twitch.tv/t/requiring-oauth-for-helix-twitch-api-endpoints/23916).
+- Bugfix: Fixed the "type emote" quest by ensuring all emote IDs are strings. (#768)
+- Bugfix: Fixed a bug where sorting in the modules page didn't sometimes work.
+
 ## v1.41
 
 - Major: Add support for streaming tweets through [tweet-provider](https://github.com/pajbot/tweet-provider) instead of going directly through Twitter.
