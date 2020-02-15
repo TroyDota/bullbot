@@ -37,8 +37,5 @@ venv/
 .idea/
 .vscode/
 
-# Should be a better way but not sure about it. Basically I pass password to confirm identity
-pajbot/constants.py
-
 # Temporary
 pajbot/apiwrappers/twitch/gql.py

@@ -39,6 +39,10 @@ class EmoteCounterModule(BaseModule):
         first_emote = args["emote_instances"][0].emote
         second_emote = args["emote_instances"][1].emote
 
+        if first_emote == second_emote:
+            bot.say(f"{source} both emotes are the same Pepeg stop pretending.")
+            return False
+
         self.emoteNames.extend([first_emote.code, second_emote.code])
         payload = {"emote1": first_emote.jsonify(), "emote2": second_emote.jsonify()}
         try:

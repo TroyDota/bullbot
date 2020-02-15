@@ -3,7 +3,6 @@ autobahn==19.9.2
 beautifulsoup4==4.8.0
 colorama==0.4.1
 cssmin==0.2.0
-currencyconverter==0.13.9
 discord-py==1.2.5
 Flask==1.1.1
 Flask-Assets==0.12

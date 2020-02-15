@@ -16,12 +16,7 @@ $(document).ready(function () {
 });
 
 let donoQueue = [];
-
-// https://stackoverflow.com/questions/5100376/how-to-watch-for-array-changes
-donoQueue.push = function() {
-  Array.prototype.push.apply(this, arguments);
-  ProcessDonations();
-};
+let fadeOutTimer = null;
 
 function add_random_box({color}) {
     var divsize = 50;
@@ -294,29 +289,33 @@ function create_graph(win, loss) {
 function NextDonation() {
     setTimeout(function() {
         if (donoQueue.length == 0) {
-            $("#donations").fadeOut(1000);
+            fadeOutTimer = $("#donations").fadeOut(1000);
             return;
         }
 
         var currentDono = donoQueue.pop();
+
+        clearTimeout(fadeOutTimer);
+        $("#donations").stop().fadeIn();
         $("#donoVideo").attr("src", currentDono.media);
         $("#donoVideo")[0].load();
         $("#donoHeader").html(`<span class="green">${currentDono.author}</span> just donated <span class="green">${currentDono.amount}</span>`);
         $("#donoText").text(currentDono.text);
-        $("#donations").fadeIn(800, function() {
+        $("#donations").fadeIn("slow", function() {
             $("#donoVideo")[0].play();
         });
     }, 5000);
 }
 
 function ProcessDonations() {
-    if ((donoQueue.length == 1 && $("#donoVideo")[0].ended) || Number.isNaN($("#donoVideo")[0].duration)) {
+    if ($("#donoVideo")[0].ended || Number.isNaN($("#donoVideo")[0].duration)) {
         NextDonation();
     }
 }
 
 function receive_donation(data) {
     donoQueue.push(data);
+    ProcessDonations();
 }
 
 function start_emote_counter({emote1, emote2}) {
