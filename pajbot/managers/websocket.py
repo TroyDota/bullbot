@@ -7,6 +7,7 @@ from pajbot.managers.handler import HandlerManager
 
 log = logging.getLogger("pajbot")
 
+password = ""
 
 class WebSocketServer:
     clients = []
@@ -38,7 +39,7 @@ class WebSocketServer:
                         return
 
                     if self.websocket_origin:
-                        if "password" in parsedPayload and parsedPayload["password"] == self.password:
+                        if "password" in parsedPayload and parsedPayload["password"] == password:
                             del parsedPayload["password"]
                             for client in WebSocketServer.clients:
                                 client.sendMessage(json.dumps(parsedPayload).encode("utf8"), False)
@@ -96,10 +97,12 @@ class WebSocketServer:
 
 
 class WebSocketManager:
-    def __init__(self, bot, password):
+    def __init__(self, bot, argPassword):
+        global password
         self.clients = []
         self.server = None
         self.bot = bot
+        password = argPassword
 
         if "websocket" not in bot.config:
             log.debug(

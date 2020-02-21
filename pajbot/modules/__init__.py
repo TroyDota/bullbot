@@ -142,6 +142,7 @@ available_modules = [
     PyramidModule,
     QuestModule,
     QuoteModule,
+    RaffleModule,
     RepspamModule,
     RouletteModule,
     ShowEmoteModule,

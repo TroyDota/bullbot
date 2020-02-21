@@ -24,12 +24,6 @@ class BetModule(BaseModule):
     CATEGORY = "Game"
 
     SETTINGS = [
-        ModuleSetting(  # Not required
-            key="max_return", label="Maximum return odds", type="number", placeholder="", default="20"
-        ),
-        ModuleSetting(  # Not required
-            key="min_return", label="Minimum return odds", type="text", placeholder="", default="1.10"
-        ),
         ModuleSetting(key="max_bet", label="Maximum bet", type="number", placeholder="", default="3000"),
     ]
 
@@ -63,31 +57,6 @@ class BetModule(BaseModule):
             db_session.flush()
 
         return current_game
-
-    """ Trial of new system, will move back if doesn't work
-    @staticmethod
-    def create_solve_formula(x, y):
-        return 1.0 + (float(x) / (float(y)))
-
-    def get_odds_ratio(self, winPoints, lossPoints):
-        if lossPoints == 0:
-            lossPoints = 1
-        if winPoints == 0:
-            winPoints = 1
-
-        winRatio = self.create_solve_formula(lossPoints, winPoints)
-        lossRatio = self.create_solve_formula(winPoints, lossPoints)
-
-        ratioList = [winRatio, lossRatio]
-
-        for c, curRatio in enumerate(ratioList):
-            if self.maxReturn and curRatio > self.maxReturn:
-                ratioList[c] = self.maxReturn
-            if self.minReturn and curRatio < self.minReturn:
-                ratioList[c] = self.minReturn
-
-        return tuple(ratioList)
-    """
 
     def spread_points(self, gameResult):
         with DBManager.create_session_scope() as db_session:
@@ -383,10 +352,6 @@ class BetModule(BaseModule):
         HandlerManager.add_handler("on_end_bets", self.automated_end)
 
         self.reminder_job = ScheduleManager.execute_every(200, self.reminder_bet)
-
-        # Move this somewhere better hopefully
-        # self.maxReturn = self.settings["max_return"] if "max_return" in self.settings else None
-        # self.minReturn = float(self.settings["min_return"]) if "min_return" in self.settings else None
 
     def disable(self, bot):
         if not bot:
