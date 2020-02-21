@@ -1,80 +1,98 @@
 if (!String.prototype.format) {
-    String.prototype.format = function () {
+    String.prototype.format = function() {
         var args = arguments;
-        return this.replace(/{(\d+)}/g, function (match, number) {
-            return typeof args[number] != 'undefined'
-                ? args[number]
-                : match
-                ;
+        return this.replace(/{(\d+)}/g, function(match, number) {
+            return typeof args[number] != 'undefined' ? args[number] : match;
         });
     };
 }
 
-$(document).ready(function () {
-    $("#donoVideo").on("ended", function() { NextDonation(); });
+$(document).ready(function() {
+    $('#donoVideo').on('ended', function() {
+        NextDonation();
+    });
     connect_to_ws();
 });
 
 let donoQueue = [];
 let fadeOutTimer = null;
 
-function add_random_box({color}) {
+function add_random_box({ color }) {
     var divsize = 50;
     var posx = (Math.random() * ($(document).width() - divsize)).toFixed();
     var posy = (Math.random() * ($(document).height() - divsize)).toFixed();
     var $newdiv = $("<div class='exploding'></div>").css({
-        'left': posx + 'px',
-        'top': posy + 'px',
+        left: posx + 'px',
+        top: posy + 'px',
         'background-color': color,
-        'opacity': 0
+        opacity: 0,
     });
     $newdiv.appendTo('body');
-    $newdiv.animate({
-        opacity: 1
-    }, 500);
-    setTimeout(function () {
-        $newdiv.animate({
-            opacity: 0,
-        }, 1000);
-        setTimeout(function () {
+    $newdiv.animate(
+        {
+            opacity: 1,
+        },
+        500
+    );
+    setTimeout(function() {
+        $newdiv.animate(
+            {
+                opacity: 0,
+            },
+            1000
+        );
+        setTimeout(function() {
             $newdiv.remove();
         }, 1000);
     }, 5000);
 }
 
-function getEmoteURL({urls}) {
-    let sortedSizes = Object.keys(urls).map(size => parseInt(size, 10)).sort();
+function getEmoteURL({ urls }) {
+    let sortedSizes = Object.keys(urls)
+        .map(size => parseInt(size, 10))
+        .sort();
     let largestSize = sortedSizes[sortedSizes.length - 1];
     return {
         url: urls[String(largestSize)],
-        needsScale: 4 / largestSize
+        needsScale: 4 / largestSize,
     };
 }
 
 // opacity = number between 0 and 100
-function add_emotes({emotes, opacity, 'persistence_time': persistenceTime, 'scale': emoteScale}) {
+function add_emotes({
+    emotes,
+    opacity,
+    persistence_time: persistenceTime,
+    scale: emoteScale,
+}) {
     for (let emote of emotes) {
         // largest URL available
-        let {url, needsScale} = getEmoteURL(emote);
+        let { url, needsScale } = getEmoteURL(emote);
 
         let divsize = 250;
         let posx = (Math.random() * ($(window).width() - divsize)).toFixed();
         let posy = (Math.random() * ($(window).height() - divsize)).toFixed();
         let newdiv = $('<img class="absemote">').css({
-            'left': posx + 'px',
-            'top': posy + 'px',
-            'opacity': 0,
-            'transform': `scale(${emoteScale / 100 * needsScale})`
+            left: posx + 'px',
+            top: posy + 'px',
+            opacity: 0,
+            transform: `scale(${(emoteScale / 100) * needsScale})`,
         });
-        newdiv.attr({src: url});
+        newdiv.attr({ src: url });
         newdiv.appendTo('body');
-        newdiv.animate({
-            opacity: opacity / 100
-        }, 500);
+        newdiv.animate(
+            {
+                opacity: opacity / 100,
+            },
+            500
+        );
         setTimeout(() => {
-            newdiv.animate({
-                opacity: 0,
-            }, 1000);
+            newdiv.animate(
+                {
+                    opacity: 0,
+                },
+                1000
+            );
             setTimeout(() => {
                 newdiv.remove();
             }, 1000);
@@ -88,10 +106,10 @@ function show_custom_image(data) {
     var posx = (Math.random() * ($(document).width() - divsize)).toFixed();
     var posy = (Math.random() * ($(document).height() - divsize)).toFixed();
     var css_data = {
-        'left': posx + 'px',
-        'top': posy + 'px',
-        'opacity': 0
-    }
+        left: posx + 'px',
+        top: posy + 'px',
+        opacity: 0,
+    };
     if (data.width !== undefined) {
         css_data.width = data.width;
     }
@@ -106,14 +124,20 @@ function show_custom_image(data) {
     }
     var $newdiv = $('<img class="absemote" src="' + url + '">').css(css_data);
     $newdiv.appendTo('body');
-    $newdiv.animate({
-        opacity: 1
-    }, 500);
-    setTimeout(function () {
-        $newdiv.animate({
-            opacity: 0,
-        }, 1000);
-        setTimeout(function () {
+    $newdiv.animate(
+        {
+            opacity: 1,
+        },
+        500
+    );
+    setTimeout(function() {
+        $newdiv.animate(
+            {
+                opacity: 0,
+            },
+            1000
+        );
+        setTimeout(function() {
             $newdiv.remove();
         }, 1000);
     }, 5000);
@@ -121,8 +145,10 @@ function show_custom_image(data) {
 
 var message_id = 0;
 
-function add_notification({message, length}) {
-    var new_notification = $('<div>' + message + '</div>').prependTo('div.notifications');
+function add_notification({ message, length }) {
+    var new_notification = $('<div>' + message + '</div>').prependTo(
+        'div.notifications'
+    );
     new_notification.textillate({
         autostart: false,
         in: {
@@ -141,17 +167,20 @@ function add_notification({message, length}) {
         },
         type: 'word',
     });
-    new_notification.on('inAnimationEnd.tlt', function () {
-        setTimeout(function () {
+    new_notification.on('inAnimationEnd.tlt', function() {
+        setTimeout(function() {
             new_notification.textillate('out');
-            new_notification.animate({
-                height: 0,
-                opacity: 0,
-            }, 1000);
+            new_notification.animate(
+                {
+                    height: 0,
+                    opacity: 0,
+                },
+                1000
+            );
         }, length * 1000);
     });
-    new_notification.on('outAnimationEnd.tlt', function () {
-        setTimeout(function () {
+    new_notification.on('outAnimationEnd.tlt', function() {
+        setTimeout(function() {
             new_notification.remove();
         }, 250);
     });
@@ -160,19 +189,25 @@ function add_notification({message, length}) {
 function refresh_combo_count(count) {
     $('#emote_combo span.count').html(count);
     $('#emote_combo span.count').addClass('animated pulsebig');
-    $('#emote_combo span.count').on('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function () {
-        $(this).removeClass('animated pulsebig');
-    });
+    $('#emote_combo span.count').on(
+        'webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend',
+        function() {
+            $(this).removeClass('animated pulsebig');
+        }
+    );
     $('#emote_combo img').addClass('animated pulsebig');
-    $('#emote_combo img').on('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function () {
-        $(this).removeClass('animated pulsebig');
-    });
+    $('#emote_combo img').on(
+        'webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend',
+        function() {
+            $(this).removeClass('animated pulsebig');
+        }
+    );
 }
 
 // https://gist.github.com/mkornblum/1384495
 // slightly altered
-$.fn.detachThenReattach = function (fn) {
-    return this.each(function () {
+$.fn.detachThenReattach = function(fn) {
+    return this.each(function() {
         let $this = $(this);
         let tmpElement = $('<div style="display: none"/>');
         $this.after(tmpElement);
@@ -183,17 +218,17 @@ $.fn.detachThenReattach = function (fn) {
 };
 
 function refresh_combo_emote(emote) {
-    let {url, needsScale} = getEmoteURL(emote);
+    let { url, needsScale } = getEmoteURL(emote);
     let $emoteCombo = $('#emote_combo img');
 
     // Fix for issue #378
     // we detach the <img> element from the DOM, then edit src and zoom,
     // then it is reattached where it used to be. This prevents the GIF animation
     // from resetting on all other emotes with the same URL on the screen
-    $emoteCombo.detachThenReattach(function () {
+    $emoteCombo.detachThenReattach(function() {
         this.attr('src', url);
         this.css('zoom', String(needsScale));
-    })
+    });
 }
 
 function debug_text(text) {
@@ -203,33 +238,41 @@ function debug_text(text) {
 let current_emote_code = null;
 let close_down_combo = null;
 
-function refresh_emote_combo({emote, count}) {
+function refresh_emote_combo({ emote, count }) {
     let emote_combo = $('#emote_combo');
     if (emote_combo.length === 0) {
         current_emote_code = emote.code;
         let message = `x<span class="count">${count}</span> <img class="comboemote" /> combo!`;
-        let new_notification = $(`<div id="emote_combo">${message}</div>`).prependTo('div.notifications');
+        let new_notification = $(
+            `<div id="emote_combo">${message}</div>`
+        ).prependTo('div.notifications');
         new_notification.addClass('animated bounceInLeft');
 
-        new_notification.on('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function () {
-            if (new_notification.hasClass('ended')) {
-                new_notification.animate({
-                    height: 0,
-                    opacity: 0,
-                }, 500);
-                setTimeout(function () {
-                    new_notification.remove();
-                }, 500);
+        new_notification.on(
+            'webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend',
+            function() {
+                if (new_notification.hasClass('ended')) {
+                    new_notification.animate(
+                        {
+                            height: 0,
+                            opacity: 0,
+                        },
+                        500
+                    );
+                    setTimeout(function() {
+                        new_notification.remove();
+                    }, 500);
+                }
             }
-        });
+        );
 
         clearTimeout(close_down_combo);
-        close_down_combo = setTimeout(function () {
+        close_down_combo = setTimeout(function() {
             new_notification.addClass('animated bounceOutLeft ended');
         }, 4000);
     } else {
         clearTimeout(close_down_combo);
-        close_down_combo = setTimeout(function () {
+        close_down_combo = setTimeout(function() {
             emote_combo.addClass('animated bounceOutLeft ended');
         }, 3000);
     }
@@ -242,14 +285,14 @@ function create_object_for_win(points) {
     return {
         value: points,
         color: '#64DD17',
-    }
+    };
 }
 
 function create_object_for_loss(points) {
     return {
         value: points,
         color: '#D50000',
-    }
+    };
 }
 
 var hsbet_chart = false;
@@ -263,17 +306,16 @@ function hsbet_set_data(win_points, loss_points) {
 }
 
 function create_graph(win, loss) {
-    var ctx = $('#hsbet .chart').get(0).getContext('2d');
+    var ctx = $('#hsbet .chart')
+        .get(0)
+        .getContext('2d');
     if (win == 0) {
         win = 1;
     }
     if (loss == 0) {
         loss = 1;
     }
-    var data = [
-        create_object_for_win(win),
-        create_object_for_loss(loss),
-    ];
+    var data = [create_object_for_win(win), create_object_for_loss(loss)];
     var options = {
         animationSteps: 100,
         animationEasing: 'easeInOutQuart',
@@ -289,26 +331,30 @@ function create_graph(win, loss) {
 function NextDonation() {
     setTimeout(function() {
         if (donoQueue.length == 0) {
-            fadeOutTimer = $("#donations").fadeOut(1000);
+            fadeOutTimer = $('#donations').fadeOut(1000);
             return;
         }
 
         var currentDono = donoQueue.pop();
 
         clearTimeout(fadeOutTimer);
-        $("#donations").stop().fadeIn();
-        $("#donoVideo").attr("src", currentDono.media);
-        $("#donoVideo")[0].load();
-        $("#donoHeader").html(`<span class="green">${currentDono.author}</span> just donated <span class="green">${currentDono.amount}</span>`);
-        $("#donoText").text(currentDono.text);
-        $("#donations").fadeIn("slow", function() {
-            $("#donoVideo")[0].play();
+        $('#donations')
+            .stop()
+            .fadeIn();
+        $('#donoVideo').attr('src', currentDono.media);
+        $('#donoVideo')[0].load();
+        $('#donoHeader').html(
+            `<span class="green">${currentDono.author}</span> just donated <span class="green">${currentDono.amount}</span>`
+        );
+        $('#donoText').text(currentDono.text);
+        $('#donations').fadeIn('slow', function() {
+            $('#donoVideo')[0].play();
         });
     }, 5000);
 }
 
 function ProcessDonations() {
-    if ($("#donoVideo")[0].ended || Number.isNaN($("#donoVideo")[0].duration)) {
+    if ($('#donoVideo')[0].ended || Number.isNaN($('#donoVideo')[0].duration)) {
         NextDonation();
     }
 }
@@ -318,12 +364,12 @@ function receive_donation(data) {
     ProcessDonations();
 }
 
-function start_emote_counter({emote1, emote2}) {
-    var {url, needsScale} = getEmoteURL(emote1);
+function start_emote_counter({ emote1, emote2 }) {
+    var { url, needsScale } = getEmoteURL(emote1);
     $('#e1Img').attr('src', url);
     $('#e2Img').css('zoom', String(needsScale));
 
-    var {url, needsScale} = getEmoteURL(emote2);
+    var { url, needsScale } = getEmoteURL(emote2);
     $('#e2Img').attr('src', url);
     $('#e2Img').css('zoom', String(needsScale));
 
@@ -333,24 +379,24 @@ function start_emote_counter({emote1, emote2}) {
     $('#emotecounter').fadeIn(1000);
 }
 
-function update_emote_counter({value1, value2}) {
+function update_emote_counter({ value1, value2 }) {
     $('#e1Text').text(value1);
     $('#e2Text').text(value2);
 }
 
 function close_emote_counter() {
-    $('#emotecounter').fadeOut(6000, function(){
+    $('#emotecounter').fadeOut(6000, function() {
         $('#e1Text').text('');
         $('#e2Text').text('');
 
-       $('#e1Img').removeAttr('src');
-       $('#e1Img').removeAttr('style');
-       $('#e2Img').removeAttr('src');
-       $('#e2Img').removeAttr('style');
+        $('#e1Img').removeAttr('src');
+        $('#e1Img').removeAttr('style');
+        $('#e2Img').removeAttr('src');
+        $('#e2Img').removeAttr('style');
     });
 }
 
-function win_percent_change({isRadiant, isDraw, winPct}) {
+function win_percent_change({ isRadiant, isDraw, winPct }) {
     if (Math.floor(Math.random() * 20) == 1) {
         $('#radiantImg').css('display', 'inline-block');
         $('#direImg').css('display', 'inline-block');
@@ -358,40 +404,40 @@ function win_percent_change({isRadiant, isDraw, winPct}) {
     }
 
     if (isRadiant) {
-        $('#radiantImg').css({'opacity': 1, 'border': '3px solid cyan'});
-        $('#direImg').css({'opacity': 0.5, 'border': ''});
+        $('#radiantImg').css({ opacity: 1, border: '3px solid cyan' });
+        $('#direImg').css({ opacity: 0.5, border: '' });
     } else {
-        $('#radiantImg').css({'opacity': 0.5, 'border': ''});
-        $('#direImg').css({'opacity': 1, 'border': '3px solid darkred'});
+        $('#radiantImg').css({ opacity: 0.5, border: '' });
+        $('#direImg').css({ opacity: 1, border: '3px solid darkred' });
     }
 
     if (isDraw) {
-        $('#radiantImg').css({'opacity': 1, 'border': '3px solid cyan'});
-        $('#direImg').css({'opacity': 1, 'border': '3px solid darkred'});
+        $('#radiantImg').css({ opacity: 1, border: '3px solid cyan' });
+        $('#direImg').css({ opacity: 1, border: '3px solid darkred' });
     }
 
     $('#winText').text(winPct);
 }
 
 function win_percent_open() {
-    $('#radiantImg').fadeIn(800, function(){});
-    $('#direImg').fadeIn(800, function(){});
-    $('#winText').fadeIn(800, function(){});
+    $('#radiantImg').fadeIn(800, function() {});
+    $('#direImg').fadeIn(800, function() {});
+    $('#winText').fadeIn(800, function() {});
 }
 
 function win_percent_close() {
     setTimeout(function() {
-        $('#radiantImg').fadeOut(3000, function(){});
-        $('#direImg').fadeOut(3000, function(){});
-        $('#winText').fadeOut(3000, function(){});
+        $('#radiantImg').fadeOut(3000, function() {});
+        $('#direImg').fadeOut(3000, function() {});
+        $('#winText').fadeOut(3000, function() {});
     }, 4000);
 }
 
 function bet_new_game() {
     var bet_el = $('#bet');
     bet_el.find('.left').css({
-        'visibility': 'visible',
-        'opacity': 1
+        visibility: 'visible',
+        opacity: 1,
     });
 
     bet_el.hide();
@@ -407,30 +453,32 @@ function bet_new_game() {
     });
 }
 
-function bet_update_data({win: win_points, loss: loss_points}) {
+function bet_update_data({ win: win_points, loss: loss_points }) {
     if (win_points > 0) {
-        $('#winbetters').text(parseInt($('#winbetters').text(), 10) + 1)
+        $('#winbetters').text(parseInt($('#winbetters').text(), 10) + 1);
         $('#winpoints').text(parseInt($('#winpoints').text(), 10) + win_points);
     } else {
-        $('#lossbetters').text(parseInt($('#lossbetters').text(), 10) + 1)
-        $('#losspoints').text(parseInt($('#losspoints').text(), 10) + loss_points);
+        $('#lossbetters').text(parseInt($('#lossbetters').text(), 10) + 1);
+        $('#losspoints').text(
+            parseInt($('#losspoints').text(), 10) + loss_points
+        );
     }
 }
 
 function bet_close_bet() {
-    var bet_el = $('#bet')
+    var bet_el = $('#bet');
     bet_el.fadeOut(10000, function() {
         bet_el.find('.left').css('visibility', 'hidden');
     });
 }
 
-function play_sound({link, volume}) {
+function play_sound({ link, volume }) {
     let player = new Howl({
         src: [link],
-        volume: volume * 0.01,  // the given volume is between 0 and 100
+        volume: volume * 0.01, // the given volume is between 0 and 100
         onend: () => console.log('Playsound audio finished playing'),
         onloaderror: e => console.warn('audio load error', e),
-        onplayerror: e => console.warn('audio play error', e)
+        onplayerror: e => console.warn('audio play error', e),
     });
 
     player.play();
@@ -450,61 +498,69 @@ function handleWebsocketData(json_data) {
     let data = json_data.data;
     switch (json_data['event']) {
         case 'new_box':
-        add_random_box(data);
-        break;
+            add_random_box(data);
+            break;
         case 'new_emotes':
-        add_emotes(data);
-        break;
+            add_emotes(data);
+            break;
         case 'notification':
-        !('length' in data) && (data.length = 2)
-        add_notification(data);
-        break;
+            !('length' in data) && (data.length = 2);
+            add_notification(data);
+            break;
         case 'timeout':
-        add_notification({message: '<span class="user">' + data.user + '</span> timed out <span class="victim">' + data.victim + '</span> with !timeout EleGiggle', length: 8});
-        break;
+            add_notification({
+                message:
+                    '<span class="user">' +
+                    data.user +
+                    '</span> timed out <span class="victim">' +
+                    data.victim +
+                    '</span> with !timeout EleGiggle',
+                length: 8,
+            });
+            break;
         case 'play_sound':
-        play_sound(data);
-        break;
+            play_sound(data);
+            break;
         case 'donation':
-        receive_donation(data);
-        break;
+            receive_donation(data);
+            break;
         case 'emote_combo':
-        refresh_emote_combo(data);
-        break;
+            refresh_emote_combo(data);
+            break;
         case 'emotecounter_start':
-        start_emote_counter(data);
-        break;
+            start_emote_counter(data);
+            break;
         case 'emotecounter_update':
-        update_emote_counter(data);
-        break;
+            update_emote_counter(data);
+            break;
         case 'emotecounter_close':
-        close_emote_counter();
-        break;
+            close_emote_counter();
+            break;
         case 'win_percent_change':
-        win_percent_change(data);
-        break;
+            win_percent_change(data);
+            break;
         case 'win_percent_open':
-        win_percent_open();
-        break;
+            win_percent_open();
+            break;
         case 'win_percent_close':
-        win_percent_close();
-        break;
+            win_percent_close();
+            break;
         case 'bet_new_game':
-        bet_new_game();
-        break;
+            bet_new_game();
+            break;
         case 'bet_update_data':
-        bet_update_data(data);
-        break;
+            bet_update_data(data);
+            break;
         case 'bet_close_game':
-        bet_close_bet();
-        break;
+            bet_close_bet();
+            break;
         case 'show_custom_image':
-        show_custom_image(data);
-        break;
+            show_custom_image(data);
+            break;
         case 'refresh':
         case 'reload':
-        location.reload(true);
-        break;
+            location.reload(true);
+            break;
     }
 }
 
@@ -517,25 +573,29 @@ function connect_to_ws() {
 
     console.log('Connecting to websocket....');
     socket = new WebSocket(ws_host);
-    socket.binaryType = "arraybuffer";
-    socket.onopen = function () {
+    socket.binaryType = 'arraybuffer';
+    socket.onopen = function() {
         console.log('WebSocket Connected!');
     };
-    socket.onerror = function (event) {
-        console.error("WebSocket error observed:", event);
+    socket.onerror = function(event) {
+        console.error('WebSocket error observed:', event);
     };
-    socket.onmessage = function (e) {
-        if (typeof e.data != "string") {
+    socket.onmessage = function(e) {
+        if (typeof e.data != 'string') {
             return;
         }
 
         let json_data = JSON.parse(e.data);
-        console.log("Received data:", json_data);
+        console.log('Received data:', json_data);
         handleWebsocketData(json_data);
     };
-    socket.onclose = function (e) {
-        console.log(`WebSocket closed ${e.wasClean ? '' : 'un'}cleanly with reason ${e.code}: ${e.reason}`);
+    socket.onclose = function(e) {
+        console.log(
+            `WebSocket closed ${e.wasClean ? '' : 'un'}cleanly with reason ${
+                e.code
+            }: ${e.reason}`
+        );
         socket = null;
         setTimeout(connect_to_ws, 2500);
-    }
+    };
 }

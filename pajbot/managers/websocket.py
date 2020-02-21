@@ -9,6 +9,7 @@ log = logging.getLogger("pajbot")
 
 password = ""
 
+
 class WebSocketServer:
     clients = []
 
