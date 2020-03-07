@@ -82,6 +82,18 @@ class HandlerManager:
         # on_end_bets(winning_team, player_team)
         HandlerManager.create_handler("on_end_bets")
 
+        # resume_spotify()
+        HandlerManager.create_handler("resume_spotify")
+
+        # pause_spotify(title, username)
+        HandlerManager.create_handler("pause_spotify")
+
+        # change_state()
+        HandlerManager.create_handler("change_state")
+
+        # donation(donation)
+        HandlerManager.create_handler("donation")
+
     @staticmethod
     def create_handler(event):
         """ Create an empty list for the given event """

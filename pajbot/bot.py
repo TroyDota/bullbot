@@ -16,11 +16,16 @@ import pajbot.utils
 from pajbot.action_queue import ActionQueue
 from pajbot.apiwrappers.authentication.access_token import UserAccessToken
 from pajbot.apiwrappers.authentication.client_credentials import ClientCredentials
-from pajbot.apiwrappers.authentication.token_manager import AppAccessTokenManager, UserAccessTokenManager
+from pajbot.apiwrappers.authentication.token_manager import (
+    AppAccessTokenManager,
+    UserAccessTokenManager,
+    SpotifyAccessTokenManager,
+)
 from pajbot.apiwrappers.twitch.helix import TwitchHelixAPI
 from pajbot.apiwrappers.twitch.id import TwitchIDAPI
 from pajbot.apiwrappers.twitch.kraken_v5 import TwitchKrakenV5API
 from pajbot.apiwrappers.twitch.tmi import TwitchTMIAPI
+from pajbot.apiwrappers.spotify import SpotifyApi
 from pajbot.constants import VERSION
 from pajbot.eventloop import SafeDefaultScheduler
 from pajbot.managers.command import CommandManager
@@ -36,6 +41,8 @@ from pajbot.managers.schedule import ScheduleManager
 from pajbot.managers.twitter import TwitterManager, PBTwitterManager
 from pajbot.managers.user_ranks_refresh import UserRanksRefreshManager
 from pajbot.managers.websocket import WebSocketManager
+from pajbot.managers.spotify_streamlabs_manager import SpotifyStreamLabsManager
+from pajbot.managers.streamlabs_socket import StreamLabsSocket
 from pajbot.migration.db import DatabaseMigratable
 from pajbot.migration.migrate import Migration
 from pajbot.migration.redis import RedisMigratable
@@ -49,7 +56,6 @@ from pajbot.models.timer import TimerManager
 from pajbot.models.user import User, UserBasics
 from pajbot.streamhelper import StreamHelper
 from pajbot.tmi import TMI
-from pajbot import utils
 from pajbot.utils import extend_version_if_possible, wait_for_redis_data_loaded
 
 log = logging.getLogger(__name__)
@@ -125,7 +131,30 @@ class Bot:
         self.twitch_helix_api = TwitchHelixAPI(RedisManager.get(), self.app_token_manager)
         self.twitch_v5_api = TwitchKrakenV5API(self.api_client_credentials, RedisManager.get())
 
-        self.twitch_tmi_api = TwitchTMIAPI()
+        self.spotify_api = None
+        self.spotify_token_manager = None
+        
+        if all(
+            bool(config["spotify"].get(name))
+            for name in ["client_id", "client_secret", "redirect_uri", "user_id"]
+        ):
+            self.spotify_api = SpotifyApi(
+                self,
+                RedisManager.get(),
+                config["spotify"]["client_id"],
+                config["spotify"]["client_secret"],
+                config["spotify"]["redirect_uri"],
+            )
+            self.spotify_token_manager = SpotifyAccessTokenManager(
+                self.spotify_api, RedisManager.get(), config["spotify"]["user_id"]
+            )
+            log.info("Spotify Loaded")
+
+        self.streamlabs_socket = (
+            StreamLabsSocket(config["streamlabs"]["socket_access_token"])
+            if bool(config["streamlabs"].get("socket_access_token"))
+            else None
+        )
 
         self.bot_user_id = self.twitch_helix_api.get_user_id(self.nickname)
         if self.bot_user_id is None:
@@ -211,6 +240,7 @@ class Bot:
         self.commands = CommandManager(
             socket_manager=self.socket_manager, module_manager=self.module_manager, bot=self
         ).load()
+        self.spotify_streamlabs_manager = SpotifyStreamLabsManager(self)
         self.websocket_manager = WebSocketManager(self, self.config["websocket"]["external_password"])
 
         HandlerManager.trigger("on_managers_loaded")
