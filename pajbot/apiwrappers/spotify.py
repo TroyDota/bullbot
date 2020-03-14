@@ -21,23 +21,39 @@ class SpotifyApi(BaseAPI):
 
         self.bearer_auth = {"Authorization": "Bearer " + self.bot.spotify_token_manager.token.access_token}
         self.basic_auth = {"Authorization": "Basic " + str(base64.b64encode(f"{self.client_id}:{self.client_secret}".encode("utf-8")), "utf-8")}
+        self.device_id = None
 
     def pause(self):
         if not self.bearer_auth:
             return
-        self.put(endpoint="me/player/pause", headers=self.bearer_auth)
+
+        if not self.device_id:
+            self.state()
+        if not self.device_id:
+            return False
+
+        self.put(endpoint="me/player", headers=self.bearer_auth, json={"device_ids":[f"{self.device_id}"], "play": False})
 
     def play(self):
         if not self.bearer_auth:
             return
-        self.put(endpoint="me/player/play", headers=self.bearer_auth)
+
+        if not self.device_id:
+            self.state()
+        if not self.device_id:
+            return False
+
+        self.put(endpoint="me/player", headers=self.bearer_auth, json={"device_ids":[f"{self.device_id}"], "play": True})
 
     def state(self):
         if not self.bearer_auth:
             return tuple([False, None, None])
+
         data = self.get(endpoint="me/player", headers=self.bearer_auth)
         if data is None:
             return tuple([False, None, None])
+
+        self.device_id = data["device"]["id"]
         artists = []
 
         for artist in data["item"]["artists"]:
