@@ -308,7 +308,7 @@ class BetModule(BaseModule):
             if not self.spectating:
                 bot.websocket_manager.emit("bet_update_data", data=payload)
 
-            finishString = f"You have bet {points} points on this game resulting in a {'radiant' if self.spectating else ''}{bet_for.name}"
+            finishString = f"You have bet {points} points on this game resulting in a {'radiant ' if self.spectating else ''}{bet_for.name}"
 
             bot.whisper(source, finishString)
 

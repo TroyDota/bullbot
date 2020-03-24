@@ -82,7 +82,7 @@ class EmoteCounterModule(BaseModule):
         self.votingOpen = False
 
     def on_message(self, source, message, whisper, **rest):
-        if source.login in self.votedUsers or whisper:
+        if source.login in self.votedUsers or whisper or self.votingOpen is False:
             return False
 
         cleanMessage = unidecode(message).strip().split()
@@ -100,7 +100,8 @@ class EmoteCounterModule(BaseModule):
 
         payload = {"value1": self.emoteValues[0], "value2": self.emoteValues[1]}
         # Execute delayed here? setTimeout() there? Who knows
-        self.bot.execute_delayed(5, self.bot.websocket_manager.emit, "emotecounter_update", payload)
+        # self.bot.execute_delayed(5, self.bot.websocket_manager.emit, "emotecounter_update", payload)
+        self.bot.websocket_manager.emit("emotecounter_update", payload)
 
     def load_commands(self, **options):
         self.commands["emotecounter"] = Command.raw_command(
