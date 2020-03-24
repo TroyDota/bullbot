@@ -1,9 +1,6 @@
 import logging
-import json
 
 from flask import render_template
-from flask import session
-from flask import redirect
 
 from pajbot.managers.db import DBManager
 from pajbot.models.roulette import Roulette
@@ -95,6 +92,4 @@ def init(app):
                     "winrate_str": f"{winrate * 100:.2f}%",
                     "roulette_base_winrate": roulette_base_winrate,
                 }
-            return render_template(
-                "user.html", user=user, roulette_stats=roulette_stats, roulettes=roulettes
-            )
+            return render_template("user.html", user=user, roulette_stats=roulette_stats, roulettes=roulettes)

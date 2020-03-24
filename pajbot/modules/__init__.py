@@ -47,6 +47,7 @@ from pajbot.modules.viewerpoints import MassPointsModule
 from pajbot.modules.math import MathModule
 from pajbot.modules.maxmsglength import MaxMsgLengthModule
 from pajbot.modules.moderators_refresh import ModeratorsRefreshModule
+from pajbot.modules.other import OtherModule
 from pajbot.modules.paidsubmode import PaidSubmodeModule
 from pajbot.modules.paidtimeout import PaidTimeoutModule
 from pajbot.modules.paiduntimeout import PaidUntimeoutModule
@@ -118,6 +119,7 @@ available_modules = [
     MathModule,
     MaxMsgLengthModule,
     ModeratorsRefreshModule,
+    OtherModule,
     PNSLModule,
     PaidSubmodeModule,
     PaidTimeoutModule,

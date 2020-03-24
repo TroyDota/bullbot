@@ -56,7 +56,10 @@ class asyncSocketIO:
             )  # formatted_amount changes to USD
 
             user.points = user.points + finalValue
-            self.bot.whisper(user, f"You have been given {finalValue} points due to a donation in your name")
+            self.bot.whisper(
+                user,
+                f"You have been given {finalValue} points due to a donation in your name. If you want to see your donation, visit https://donations.admiralbulldog.live",
+            )
 
     def _receiveEventsThread(self):
         self.socketIO.wait()

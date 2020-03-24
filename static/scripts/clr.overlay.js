@@ -337,18 +337,22 @@ function NextDonation() {
 
         var currentDono = donoQueue.pop();
 
-        clearTimeout(fadeOutTimer);
-        $('#donations')
-            .stop()
-            .fadeIn();
         $('#donoVideo').attr('src', currentDono.media);
         $('#donoVideo')[0].load();
         $('#donoHeader').html(
             `<span class="green">${currentDono.author}</span> just donated <span class="green">${currentDono.amount}</span>`
         );
         $('#donoText').text(currentDono.text);
-        $('#donations').fadeIn('slow', function() {
-            $('#donoVideo')[0].play();
+
+        $('#donoVideo').on('loadeddata', function() {
+            clearTimeout(fadeOutTimer);
+            $('#donations')
+                .stop()
+                .fadeIn();
+
+            $('#donations').fadeIn('slow', function() {
+                $('#donoVideo')[0].play();
+            });
         });
     }, 5000);
 }
