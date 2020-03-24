@@ -117,6 +117,7 @@
                 Cooldown<br>
                 (seconds)
             </th>
+            <th class="collapsing">Tier</th>
             <th class="collapsing">Enabled</th>
             <th class="collapsing" style="min-width: 120px">Actions</th>
         </tr>
@@ -177,6 +178,12 @@
                     <div class="ui input compact cooldown-input">
                         <input autocomplete="off" form="form-{{ playsound.name }}" type="number" name="cooldown"
                                value="{{ playsound.cooldown }}">
+                    </div>
+                </td>
+                <td class="top aligned">
+                    <div class="ui input compact tier-input">
+                        <input autocomplete="off" form="form-{{ playsound.name }}" type="number" name="tier"
+                            min="0" max="3" value="{{ playsound.tier }}">
                     </div>
                 </td>
                 <td class="top aligned">
