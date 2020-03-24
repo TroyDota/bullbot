@@ -90,8 +90,8 @@
                     seconds {{ "(global default)" if playsound.cooldown is none }}
                 </td>
                 {% set tier = module_settings.default_tier if playsound.tier is none else playsound.tier %}
-                <td>{{ "Everyone" if tier == 0 else "Tier " + tier + " subscribers"}}
-                    {{ " (global default)" if playsound.tier is none }} 
+                <td>{{ 'Everyone' if tier == 0 else 'Tier ' ~ tier ~ ' subscribers'}}
+                    {{ ' (global default)' if playsound.tier is none }} 
                 </td>
                 <td>
                     <div class="play-in-browser-wrapper"
