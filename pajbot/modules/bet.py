@@ -23,9 +23,7 @@ class BetModule(BaseModule):
     DESCRIPTION = "Enables betting on games with !bet"
     CATEGORY = "Game"
 
-    SETTINGS = [
-        ModuleSetting(key="max_bet", label="Maximum bet", type="number", placeholder="", default="3000"),
-    ]
+    SETTINGS = [ModuleSetting(key="max_bet", label="Maximum bet", type="number", placeholder="", default="3000")]
 
     def __init__(self, bot):
         super().__init__(bot)

@@ -7,7 +7,6 @@ from flask import request
 from flask import session
 from flask import url_for
 from flask_oauthlib.client import OAuth, OAuthException
-import re
 
 from pajbot.apiwrappers.authentication.access_token import UserAccessToken
 from pajbot.managers.db import DBManager
