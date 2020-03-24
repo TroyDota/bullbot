@@ -54,6 +54,15 @@ class PlaysoundModule(BaseModule):
             constraints={"min_value": 0, "max_value": 600},
         ),
         ModuleSetting(
+            key="default_tier",
+            label="Default subscriber tier",
+            type="number",
+            required=True,
+            placeholder="",
+            default=0,
+            constraints={"min_value": 0, "max_value": 3},
+        ),
+        ModuleSetting(
             key="global_volume",
             label="Global volume (0-100)",
             type="number",
@@ -132,6 +141,13 @@ class PlaysoundModule(BaseModule):
                 )
                 return False
 
+            if source.tier < (playsound.tier or self.settings["default_tier"]):
+                bot.whisper(
+                    source,
+                    f"This playsound is specific for tier {playsound.tier} subs",
+                )
+                return False
+
             if self.global_cooldown and source.username not in ["admiralbulldog", "datguy1"]:
                 if self.settings["global_cd_whisper"]:
                     bot.whisper(
@@ -151,9 +167,7 @@ class PlaysoundModule(BaseModule):
                 )
                 return False
 
-            cost = playsound.cost
-            if cost is None:
-                cost = self.settings["point_cost"]
+            cost = playsound.cost or self.settings["point_cost"]
 
             if not source.can_afford(cost):
                 bot.whisper(source, f"You need {cost} points to play this playsound, you have {source.points}.")
@@ -201,7 +215,8 @@ class PlaysoundModule(BaseModule):
         parser.add_argument("--cooldown", dest="cooldown", type=str)
         parser.add_argument("--enabled", dest="enabled", action="store_true")
         parser.add_argument("--disabled", dest="enabled", action="store_false")
-        parser.set_defaults(volume=None, cooldown=None, enabled=None)
+        parser.add_argument("--tier", dest="tier", type=str)
+        parser.set_defaults(volume=None, cooldown=None, enabled=None, tier=0)
 
         try:
             args, unknown = parser.parse_known_args(message.split())
@@ -279,6 +294,10 @@ class PlaysoundModule(BaseModule):
     @staticmethod
     def validate_cost(cost):
         return cost is None or cost >= 0
+
+    @staticmethod
+    def validate_tier(tier):
+        return tier is None or tier >= 0 and tier <= 3
 
     def update_cost(self, bot, source, playsound, parsed_options):
         if "cost" in parsed_options:
