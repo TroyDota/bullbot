@@ -84,7 +84,7 @@ class PlaysoundAPI(Resource):
             playsound.volume = volume
             playsound.cost = cost
             playsound.cooldown = cooldown
-            playsound.tier = tier
+            playsound.tier = tier or None
             playsound.enabled = enabled
 
             if rename:
