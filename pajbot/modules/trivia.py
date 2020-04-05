@@ -72,12 +72,11 @@ class TriviaModule(BaseModule):
 
         self.jservice = False
         self.trivia_running = False
-        self.manualStart = False
         self.last_question = None
         self.question = None
         self.step = 0
         self.last_step = None
-        self.streptocuckus = 0
+        self.deadTrivia = 0
         self.correct_dict = {}
 
         self.gazCategories = [
@@ -188,6 +187,7 @@ class TriviaModule(BaseModule):
     def poll_trivia(self):
         if not self.trivia_running:
             return False
+
         # Check if new question needed
         if self.question is None and (
             self.last_question is None or (utils.now() - self.last_question) >= datetime.timedelta(seconds=11)
@@ -299,6 +299,7 @@ class TriviaModule(BaseModule):
 
     def step_end(self):
         if self.question is not None:
+            self.deadTrivia += 1
             self.winstreak = 0
             self.bot.safe_me(
                 f'MingLee No one could answer the trivia! The answer was "{self.question["answer"]}" MingLee'
@@ -307,8 +308,15 @@ class TriviaModule(BaseModule):
             self.step = 0
             self.last_question = utils.now()
             with DBManager.create_session_scope() as db_session:
-                user = User.find_by_user_input(db_session, "datguy1")
+                user = User.find_by_id(db_session, 83460519)
                 user.points = user.points + 1
+
+            if self.deadTrivia > 8:
+                self.bot.say("Guys? Anyone here? Sadge")
+                self.trivia_running = False
+                if self.job is not None:
+                    self.job.remove()
+                    self.job = None
 
     def check_run(self):
         if self.bot.is_online and self.trivia_running:
@@ -386,6 +394,7 @@ class TriviaModule(BaseModule):
         if message is None or whisper or source.ignored:
             return
 
+        self.deadTrivia = 0
         if self.question:
             right_answer = self.question["answer"].lower()
             user_answer = message.lower()
