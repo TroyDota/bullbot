@@ -171,19 +171,19 @@
                 <td class="top aligned">
                     <div class="ui input compact" style="width: 150px;">
                         <input autocomplete="off" form="form-{{ playsound.name }}" type="number" name="cost"
-                               step="100" value="{{ playsound.cost }}">
+                               step="100" value="{{ playsound.cost if playsound.cost }}">
                     </div>
                 </td>
                 <td class="top aligned">
                     <div class="ui input compact cooldown-input">
                         <input autocomplete="off" form="form-{{ playsound.name }}" type="number" name="cooldown"
-                               value="{{ playsound.cooldown }}">
+                               value="{{ playsound.cooldown if playsound.cooldown }}">
                     </div>
                 </td>
                 <td class="top aligned">
                     <div class="ui input compact tier-input">
                         <input autocomplete="off" form="form-{{ playsound.name }}" type="number" name="tier"
-                            min="0" max="3" value="{{ playsound.tier }}">
+                            min="0" max="3" value="{{ playsound.tier if playsound.tier }}">
                     </div>
                 </td>
                 <td class="top aligned">
