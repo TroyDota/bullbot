@@ -54,15 +54,6 @@ class PlaysoundModule(BaseModule):
             constraints={"min_value": 0, "max_value": 600},
         ),
         ModuleSetting(
-            key="default_tier",
-            label="Default subscriber tier",
-            type="number",
-            required=True,
-            placeholder="",
-            default=0,
-            constraints={"min_value": 0, "max_value": 3},
-        ),
-        ModuleSetting(
             key="global_volume",
             label="Global volume (0-100)",
             type="number",
@@ -141,8 +132,9 @@ class PlaysoundModule(BaseModule):
                 )
                 return False
 
-            if source.tier < (playsound.tier or self.settings["default_tier"]):
-                bot.whisper(source, f"This playsound is specific for tier {playsound.tier} subs")
+            playsound_tier = playsound.tier or 0
+            if source.tier < playsound_tier:
+                bot.whisper(source, f"This playsound is specific for tier {playsound_tier} subs")
                 return False
 
             if self.global_cooldown and source.username not in ["admiralbulldog", "datguy1"]:
@@ -288,6 +280,24 @@ class PlaysoundModule(BaseModule):
             playsound.cooldown = cooldown_int
         return True
 
+     def update_tier(self, bot, source, playsound, parsed_options):
+        if "tier" in parsed_options:
+            if parsed_options["tier"].lower() == "none":
+                tier = None
+            else:
+                try:
+                    tier = int(parsed_options["tier"])
+                except ValueError:
+                    bot.whisper(source.username, 'Error: Tier must be a number or the string "none".')
+                    return False
+
+            if not self.validate_tier(tier):
+                bot.whisper(source.username, 'Error: Tier must be >= 0 and <=3 or "none".')
+                return False
+
+            playsound.tier = tier
+        return True
+    
     @staticmethod
     def validate_cost(cost):
         return cost is None or cost >= 0
@@ -363,6 +373,9 @@ class PlaysoundModule(BaseModule):
             if not self.update_cost(bot, source, playsound, options):
                 return
 
+            if not self.update_tier(bot, source, playsound, options):
+                return
+
             if not self.update_cooldown(bot, source, playsound, options):
                 return
 
@@ -408,6 +421,9 @@ class PlaysoundModule(BaseModule):
                 return
 
             if not self.update_cost(bot, source, playsound, options):
+                return
+
+            if not self.update_tier(bot, source, playsound, options):
                 return
 
             if not self.update_cooldown(bot, source, playsound, options):
@@ -460,7 +476,7 @@ class PlaysoundModule(BaseModule):
 
             bot.whisper(
                 source,
-                f"name={playsound.name}, link={playsound.link}, volume={playsound.volume}, cooldown={playsound.cooldown}, enabled={playsound.enabled}",
+                f"name={playsound.name}, link={playsound.link}, volume={playsound.volume}, cooldown={playsound.cooldown}, tier={playsound.tier}, enabled={playsound.enabled}",
             )
 
     def load_commands(self, **options):
