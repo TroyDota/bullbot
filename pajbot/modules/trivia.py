@@ -83,10 +83,10 @@ class TriviaModule(BaseModule):
         self.gazCategories = [
             "W_OMEGALUL_W",
             "Vietnam",
-            "Video_Games",
             "Video Games",
             "Twitch",
             "Sports",
+            "Star Wars",
             "Spongebob",
             "Science",
             "Programming",
@@ -98,9 +98,11 @@ class TriviaModule(BaseModule):
             "Languages",
             "History",
             "Geography",
+            "General Knowledge",
             "Gachimuchi",
             "Gachi",
             "Emotes",
+            "Entertainment",
             "Bees",
             "Country",
             "Books",
@@ -108,6 +110,7 @@ class TriviaModule(BaseModule):
             "D DansGame TA",
             "Country",
             "HTTP",
+            "Football",
         ]
 
         self.bad_phrases = [
