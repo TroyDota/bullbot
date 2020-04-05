@@ -476,10 +476,11 @@ function bet_close_bet() {
     });
 }
 
-function play_sound({ link, volume }) {
+function play_sound({ link, volume, rate }) {
     let player = new Howl({
         src: [link],
         volume: volume * 0.01, // the given volume is between 0 and 100
+        rate: rate,
         onend: () => console.log('Playsound audio finished playing'),
         onloaderror: e => console.warn('audio load error', e),
         onplayerror: e => console.warn('audio play error', e),
@@ -523,6 +524,7 @@ function handleWebsocketData(json_data) {
             });
             break;
         case 'play_sound':
+            !('rate' in data) && (data.rate = 1.0);
             play_sound(data);
             break;
         case 'donation':

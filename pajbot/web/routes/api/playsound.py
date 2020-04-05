@@ -117,7 +117,7 @@ class PlayPlaysoundAPI(Resource):
                 return "Playsound does not exist", 404
             # explicitly don't check for disabled
 
-        if options["user"].username_raw == "dank__doge":
+        if options["user"] == "dank__doge":
             return "Feels Very Weird Man", 403
 
         SocketClientManager.send("playsound.play", {"name": playsound_name})

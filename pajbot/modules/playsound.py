@@ -124,11 +124,16 @@ class PlaysoundModule(BaseModule):
         self.global_cooldown = False
 
     def play_sound(self, bot, source, message, **rest):
+        playsound_rate = 1.0
         if not message:
             bot.say(f"Playsounds can be tried out at https://{self.bot.bot_domain}/playsounds")
             return False
 
         playsound_name = message.split(" ")[0].lower()
+        try:
+            playsound_rate = min(4.0, max(0.5, float(message.split(" ")[1])))
+        except (IndexError, ValueError):
+            pass
 
         with DBManager.create_session_scope() as session:
             # load playsound from the database
@@ -141,10 +146,6 @@ class PlaysoundModule(BaseModule):
                 )
                 return False
 
-            if source.tier < (playsound.tier or self.settings["default_tier"]):
-                bot.whisper(source, f"This playsound is specific for tier {playsound.tier} subs")
-                return False
-
             if self.global_cooldown and source.username not in ["admiralbulldog", "datguy1"]:
                 if self.settings["global_cd_whisper"]:
                     bot.whisper(
@@ -153,10 +154,7 @@ class PlaysoundModule(BaseModule):
                     )
                 return False
 
-            cooldown = playsound.cooldown
-            if cooldown is None:
-                cooldown = self.settings["default_sample_cd"]
-
+            cooldown = playsound.cooldown or self.settings["default_sample_cd"]
             if playsound_name in self.sample_cooldown and source.username not in ["admiralbulldog", "datguy1"]:
                 bot.whisper(
                     source,
@@ -180,6 +178,7 @@ class PlaysoundModule(BaseModule):
             payload = {
                 "link": playsound.link,
                 "volume": int(round(playsound.volume * self.settings["global_volume"] / 100)),
+                "rate": playsound_rate
             }
 
             log.debug(f"Playsound module is emitting payload: {json.dumps(payload)}")
