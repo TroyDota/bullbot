@@ -65,8 +65,8 @@ class PlaysoundAPI(Resource):
         if not PlaysoundModule.validate_cooldown(cooldown):
             return "Bad cooldown argument", 400
 
-        # tier is allowed to be null/None or >= 0 but <= 3
-        tier = args.get("tier", None) or 0
+        # tier is allowed to be empty or > 0 but <= 3
+        tier = args.get("tier", None) or None
         if not PlaysoundModule.validate_tier(tier):
             return "Bad tier argument", 400
 
@@ -79,12 +79,13 @@ class PlaysoundAPI(Resource):
 
             if playsound is None:
                 return "Playsound does not exist", 404
+
             # TODO admin audit logs
             playsound.link = link
             playsound.volume = volume
             playsound.cost = cost
             playsound.cooldown = cooldown
-            playsound.tier = tier or None
+            playsound.tier = tier
             playsound.enabled = enabled
 
             if rename:

@@ -138,7 +138,7 @@ class PlaysoundModule(BaseModule):
                 return False
 
             playsound_tier = playsound.tier or 0
-            if source.tier < playsound_tier:
+            if source.tier < playsound_tier and source.level < 500:
                 bot.whisper(source, f"This playsound is specific for tier {playsound_tier} subs")
                 return False
 
@@ -174,7 +174,7 @@ class PlaysoundModule(BaseModule):
             payload = {
                 "link": playsound.link,
                 "volume": int(round(playsound.volume * self.settings["global_volume"] / 100)),
-                "rate": playsound_rate
+                "rate": playsound_rate,
             }
 
             log.debug(f"Playsound module is emitting payload: {json.dumps(payload)}")
@@ -207,8 +207,8 @@ class PlaysoundModule(BaseModule):
         parser.add_argument("--cooldown", dest="cooldown", type=str)
         parser.add_argument("--enabled", dest="enabled", action="store_true")
         parser.add_argument("--disabled", dest="enabled", action="store_false")
-        parser.add_argument("--tier", dest="tier", type=str)
-        parser.set_defaults(volume=None, cooldown=None, enabled=None, tier=0)
+        parser.add_argument("--tier", dest="tier", type=int)
+        parser.set_defaults(volume=None, cooldown=None, enabled=None, tier=None)
 
         try:
             args, unknown = parser.parse_known_args(message.split())
@@ -283,31 +283,33 @@ class PlaysoundModule(BaseModule):
             playsound.cooldown = cooldown_int
         return True
 
-     def update_tier(self, bot, source, playsound, parsed_options):
+    @staticmethod
+    def validate_tier(tier):
+        return tier is None or tier > 0 and tier <= 3
+
+    def update_tier(self, bot, source, playsound, parsed_options):
         if "tier" in parsed_options:
-            if parsed_options["tier"].lower() == "none":
+            tier = parsed_options["tier"]
+            if bool(tier) is False:
                 tier = None
             else:
                 try:
                     tier = int(parsed_options["tier"])
                 except ValueError:
-                    bot.whisper(source.username, 'Error: Tier must be a number or the string "none".')
+                    bot.whisper(source, "Error: Tier must be a number or empty.")
                     return False
 
             if not self.validate_tier(tier):
-                bot.whisper(source.username, 'Error: Tier must be >= 0 and <=3 or "none".')
+                bot.whisper(source, "Error: Tier must be > 0 and <= 3 or empty.")
                 return False
 
             playsound.tier = tier
+
         return True
 
     @staticmethod
     def validate_cost(cost):
         return cost is None or cost >= 0
-
-    @staticmethod
-    def validate_tier(tier):
-        return tier is None or tier >= 0 and tier <= 3
 
     def update_cost(self, bot, source, playsound, parsed_options):
         if "cost" in parsed_options:
