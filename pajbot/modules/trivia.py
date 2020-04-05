@@ -308,7 +308,7 @@ class TriviaModule(BaseModule):
             self.step = 0
             self.last_question = utils.now()
             with DBManager.create_session_scope() as db_session:
-                user = User.find_by_id(db_session, 83460519)
+                user = User.find_by_id(db_session, "83460519")
                 user.points = user.points + 1
 
             if self.deadTrivia > 8:
