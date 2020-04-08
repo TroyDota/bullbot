@@ -36,6 +36,7 @@ from pajbot.modules.emote_timeout import EmoteTimeoutModule
 from pajbot.modules.followage import FollowAgeModule
 from pajbot.modules.quests.gettimedout import GetTimedOutQuestModule
 from pajbot.modules.givepoints import GivePointsModule
+from pajbot.modules.highlight_tts import HighlightTTSModule
 from pajbot.modules.lastfm import LastfmModule
 from pajbot.modules.leaguerank import LeagueRankModule
 from pajbot.modules.linefarming import LineFarmingModule
@@ -107,6 +108,7 @@ available_modules = [
     FollowAgeModule,
     GetTimedOutQuestModule,
     GivePointsModule,
+    HighlightTTSModule,
     IgnoreModule,
     LastfmModule,
     LeagueRankModule,
