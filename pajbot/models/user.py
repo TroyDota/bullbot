@@ -89,7 +89,7 @@ class User(Base):
     ignored = Column(BOOLEAN, nullable=False, server_default="FALSE")
     banned = Column(BOOLEAN, nullable=False, server_default="FALSE")
     timeout_end = Column(UtcDateTime(), nullable=True, server_default="NULL")
-    tier = Column(INT, nullable=True)
+    tier = Column(INT, nullable=False, server_default="0")
 
     _rank = relationship("UserRank", primaryjoin=foreign(id) == UserRank.user_id, lazy="select")
 
@@ -107,6 +107,7 @@ class User(Base):
         self.ignored = False
         self.banned = False
         self.timeout_end = None
+        self.tier = 0
 
         super().__init__(*args, **kwargs)
 
@@ -296,6 +297,7 @@ class User(Base):
             "last_active": self.last_seen.isoformat() if self.last_active is not None else None,
             "ignored": self.ignored,
             "banned": self.banned,
+            "tier": self.tier,
         }
 
     def __eq__(self, other):

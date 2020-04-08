@@ -137,9 +137,9 @@ class PlaysoundModule(BaseModule):
                 )
                 return False
 
-            playsound_tier = playsound.tier or 0
-            if source.tier < playsound_tier and source.level < 500:
-                bot.whisper(source, f"This playsound is specific for tier {playsound_tier} subs")
+            playsoundTier = playsound.tier or 0
+            if source.tier < playsoundTier and source.level < 500:
+                bot.whisper(source, f"This playsound is specific for tier {playsoundTier} and up subs")
                 return False
 
             if self.global_cooldown and source.username not in ["admiralbulldog", "datguy1"]:
