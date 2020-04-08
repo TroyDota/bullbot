@@ -311,7 +311,7 @@ class TriviaModule(BaseModule):
                 user = User.find_by_id(db_session, "83460519")
                 user.points = user.points + 1
 
-            if self.deadTrivia > 8:
+            if self.deadTrivia > 5:
                 self.bot.say("Guys? Anyone here? Sadge")
                 self.trivia_running = False
                 if self.job is not None:
