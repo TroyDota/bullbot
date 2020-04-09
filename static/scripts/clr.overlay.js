@@ -19,6 +19,7 @@ let highlightQueue = [];
 let fadeOutTimer = null;
 let notificationMessage = null;
 let playAudio = new Audio();
+playAudio.volume = 0.5; // Object initialiser?
 
 playAudio.addEventListener('canplaythrough', function() {
     setTimeout(function() {
