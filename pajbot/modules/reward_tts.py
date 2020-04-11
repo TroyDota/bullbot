@@ -141,7 +141,7 @@ class RewardTTSModule(BaseModule):
             synthArgs["Text"] = message
             synthArgs["TextType"] = "text"
             synthResp = self.pollyClient.synthesize_speech(**synthArgs)
-        except botocore.errorfactory.InvalidSsmlException as e:
+        except botocore.errorfactory.InvalidSsmlException:
             self.bot.whisper_login(username, "Your message syntax is malformed. Falling back to normal.")
             synthArgs["Text"] = message
             synthArgs["TextType"] = "text"

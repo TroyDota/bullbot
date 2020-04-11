@@ -399,7 +399,7 @@ function receive_donation(data) {
 }
 
 function PlayHighlights() {
-    if (!playAudio.ended && !(playAudio.src == '' || playAudio.src == '#')) {
+    if (!playAudio.ended && playAudio.src != '') {
         return;
     }
 
@@ -424,7 +424,7 @@ function receive_highlight(data) {
 
 function skip_highlight() {
     playAudio.pause();
-    playAudio.src = '#';
+    playAudio.removeAttribute('src');
     notificationMessage.textillate('out');
     notificationMessage.animate(
         {
