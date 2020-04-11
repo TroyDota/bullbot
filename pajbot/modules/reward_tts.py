@@ -88,9 +88,9 @@ class RewardTTSModule(BaseModule):
             default="Nicole",
             options=normalVoices,
         ),
-        ModuleSetting(key="random_voice", label="Use random voice", type="boolean", required=True, default=False,),
+        ModuleSetting(key="random_voice", label="Use random voice", type="boolean", required=True, default=False),
         ModuleSetting(
-            key="plebs_allowed", label="Are plebs allowed to use it?", type="boolean", required=True, default=False,
+            key="plebs_allowed", label="Are plebs allowed to use it?", type="boolean", required=True, default=False
         ),
         ModuleSetting(
             key="redeemed_id",

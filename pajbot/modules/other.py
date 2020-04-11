@@ -34,7 +34,7 @@ class OtherModule(BaseModule):
             default="Plebs incoming! peepoHrun",
             constraints={"min_str_len": 10, "max_str_len": 400},
         ),
-        ModuleSetting(key="enable_drop", label="Enable drop Jebait", type="boolean", required=True, default=True,),
+        ModuleSetting(key="enable_drop", label="Enable drop Jebait", type="boolean", required=True, default=True),
         ModuleSetting(
             key="drop_prefix",
             label="Prefix for drop message",

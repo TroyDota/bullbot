@@ -18,7 +18,7 @@ class PubSubManager:
         self.streamerID = bot.streamer_user_id
 
         self.accessTokenManager = UserAccessTokenManager(
-            api=bot.twitch_id_api, redis=RedisManager.get(), username=bot.streamer, user_id=self.streamerID,
+            api=bot.twitch_id_api, redis=RedisManager.get(), username=bot.streamer, user_id=self.streamerID
         )
 
         self.connect()
