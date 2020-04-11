@@ -19,7 +19,7 @@ let highlightQueue = [];
 let fadeOutTimer = null;
 let notificationMessage = null;
 let playAudio = new Audio();
-playAudio.volume = 0.5; // Object initialiser?
+playAudio.volume = 0.3; // Object initialiser?
 
 playAudio.addEventListener('canplaythrough', function() {
     setTimeout(function() {
@@ -28,18 +28,21 @@ playAudio.addEventListener('canplaythrough', function() {
 });
 
 playAudio.addEventListener('ended', function() {
-    notificationMessage.textillate('out');
-    notificationMessage.animate(
-        {
-            height: 0,
-            opacity: 0,
-        },
-        1000
-    );
+    var currentNotif = notificationMessage;
+    setTimeout(function() {
+        currentNotif.textillate('out');
+        currentNotif.animate(
+            {
+                height: 0,
+                opacity: 0,
+            },
+            1000
+        );
 
-    if (highlightQueue.length > 0) {
-        PlayHighlights();
-    }
+        if (highlightQueue.length > 0) {
+            PlayHighlights();
+        }
+    }, 2000);
 });
 
 function add_random_box({ color }) {
@@ -170,10 +173,10 @@ function show_custom_image(data) {
 
 var message_id = 0;
 
-function add_notification({ message, length }) {
-    var new_notification = $('<div>' + message + '</div>').prependTo(
-        'div.notifications'
-    );
+function add_notification({ message, length, extra_classes }) {
+    var new_notification = $(
+        `<div class="${extra_classes}">${message}</div>`
+    ).prependTo('div.notifications');
     new_notification.textillate({
         autostart: false,
         in: {
@@ -396,28 +399,42 @@ function receive_donation(data) {
 }
 
 function PlayHighlights() {
-    if (!playAudio.ended && playAudio.src != '') {
+    if (!playAudio.ended && !(playAudio.src == '' || playAudio.src == '#')) {
         return;
     }
 
     var currentHighlight = highlightQueue.shift();
-    playAudio.src = currentHighlight.link;
+    playAudio.src = 'data:audio/mp3;base64,' + currentHighlight.speech;
     playAudio.load();
 
     // playAudio.duration is sometimes infinite for some reason
     notificationMessage = add_notification({
-        message:
-            '<span class="user">' +
-            currentHighlight.user +
-            ':</span> ' +
-            currentHighlight.message,
+        message: `<span class="user">${currentHighlight.user}</span> <span style="color: orange;">(${currentHighlight.voice})</span>: ${currentHighlight.message}`,
         length: 500,
+        extra_classes: 'tts',
     });
 }
 
 function receive_highlight(data) {
     highlightQueue.push(data);
     if (highlightQueue.length == 1) {
+        PlayHighlights();
+    }
+}
+
+function skip_highlight() {
+    playAudio.pause();
+    playAudio.src = '#';
+    notificationMessage.textillate('out');
+    notificationMessage.animate(
+        {
+            height: 0,
+            opacity: 0,
+        },
+        1000
+    );
+
+    if (highlightQueue.length > 0) {
         PlayHighlights();
     }
 }
@@ -586,6 +603,9 @@ function handleWebsocketData(json_data) {
             break;
         case 'highlight':
             receive_highlight(data);
+            break;
+        case 'skip_highlight':
+            skip_highlight();
             break;
         case 'emote_combo':
             refresh_emote_combo(data);

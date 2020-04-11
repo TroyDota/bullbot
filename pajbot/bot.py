@@ -33,6 +33,7 @@ from pajbot.managers.kvi import KVIManager
 from pajbot.managers.redis import RedisManager
 from pajbot.managers.schedule import ScheduleManager
 from pajbot.managers.twitter import TwitterManager, PBTwitterManager
+from pajbot.managers.pubsub import PubSubManager
 from pajbot.managers.user_ranks_refresh import UserRanksRefreshManager
 from pajbot.managers.websocket import WebSocketManager
 from pajbot.migration.db import DatabaseMigratable
@@ -212,6 +213,7 @@ class Bot:
             socket_manager=self.socket_manager, module_manager=self.module_manager, bot=self
         ).load()
         self.websocket_manager = WebSocketManager(self, self.config["websocket"]["external_password"])
+        self.pubsub_manager = PubSubManager(self)
 
         HandlerManager.trigger("on_managers_loaded")
 
@@ -820,6 +822,7 @@ class Bot:
 
         self.twitter_manager.quit()
         self.socket_manager.quit()
+        self.pubsub_manager.quit()
 
         sys.exit(0)
 
