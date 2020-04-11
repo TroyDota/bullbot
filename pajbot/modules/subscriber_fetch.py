@@ -116,7 +116,7 @@ WITH updated_users AS (
 UPDATE "user"
 SET
     subscriber = FALSE,
-    tier = NULL
+    tier = 0
 WHERE
     id NOT IN (SELECT * FROM updated_users) AND
     subscriber IS TRUE"""
