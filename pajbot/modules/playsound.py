@@ -163,7 +163,10 @@ class PlaysoundModule(BaseModule):
                 cost = int(cost * (playsound_rate + 1))
 
             if not source.can_afford(cost):
-                bot.whisper(source, f"You need {cost} points to play this playsound, you have {source.points}. Keep in mind having a lower play rate makes it cost more.")
+                bot.whisper(
+                    source,
+                    f"You need {cost} points to play this playsound, you have {source.points}. Keep in mind having a lower play rate makes it cost more.",
+                )
                 return False
 
             if not playsound.enabled:
