@@ -54,12 +54,18 @@ def init(app):
             state=state,
             scope=(
                 "user_read user:edit user:read:email channel:moderate chat:edit "
-                + "chat:read whispers:read whispers:edit channel_editor channel:read:subscriptions"
+                "chat:read whispers:read whispers:edit channel_editor channel:read:subscriptions"
             ),
             force_verify="true",
         )
 
-    streamer_scopes = ["user_read", "channel:read:subscriptions"]
+    streamer_scopes = [
+        "user_read",
+        "channel:read:subscriptions",
+        "channel:read:redemptions",
+        "bits:read",
+        "channel_subscriptions",
+    ]
     """Request these scopes on /streamer_login"""
 
     @app.route("/streamer_login")
