@@ -94,6 +94,9 @@ class HandlerManager:
         # donation(donation)
         HandlerManager.create_handler("donation")
 
+        # on_redeem(redeemer, redeemed_id, user_input)
+        HandlerManager.create_handler("on_redeem")
+
     @staticmethod
     def create_handler(event):
         """ Create an empty list for the given event """

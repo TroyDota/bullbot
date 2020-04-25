@@ -72,21 +72,20 @@ class TriviaModule(BaseModule):
 
         self.jservice = False
         self.trivia_running = False
-        self.manualStart = False
         self.last_question = None
         self.question = None
         self.step = 0
         self.last_step = None
-        self.streptocuckus = 0
+        self.deadTrivia = 0
         self.correct_dict = {}
 
         self.gazCategories = [
             "W_OMEGALUL_W",
             "Vietnam",
-            "Video_Games",
             "Video Games",
             "Twitch",
             "Sports",
+            "Star Wars",
             "Spongebob",
             "Science",
             "Programming",
@@ -98,9 +97,11 @@ class TriviaModule(BaseModule):
             "Languages",
             "History",
             "Geography",
+            "General Knowledge",
             "Gachimuchi",
             "Gachi",
             "Emotes",
+            "Entertainment",
             "Bees",
             "Country",
             "Books",
@@ -108,6 +109,7 @@ class TriviaModule(BaseModule):
             "D DansGame TA",
             "Country",
             "HTTP",
+            "Football",
         ]
 
         self.bad_phrases = [
@@ -185,6 +187,7 @@ class TriviaModule(BaseModule):
     def poll_trivia(self):
         if not self.trivia_running:
             return False
+
         # Check if new question needed
         if self.question is None and (
             self.last_question is None or (utils.now() - self.last_question) >= datetime.timedelta(seconds=11)
@@ -216,11 +219,8 @@ class TriviaModule(BaseModule):
                             f"https://api.gazatu.xyz/trivia/questions?count=1&include=[{','.join(self.gazCategories)}]",
                             headers={"User-Agent": self.bot.user_agent},
                         )
-                        resjson = r.json()[0]
-                        if resjson["disabled"]:
-                            self.question = None
-                            continue
-                        self.question = resjson
+
+                        self.question = r.json()[0]
                         self.check_question()
 
             # Remove oldest question
@@ -299,6 +299,7 @@ class TriviaModule(BaseModule):
 
     def step_end(self):
         if self.question is not None:
+            self.deadTrivia += 1
             self.winstreak = 0
             self.bot.safe_me(
                 f'MingLee No one could answer the trivia! The answer was "{self.question["answer"]}" MingLee'
@@ -307,22 +308,31 @@ class TriviaModule(BaseModule):
             self.step = 0
             self.last_question = utils.now()
             with DBManager.create_session_scope() as db_session:
-                user = User.find_by_user_input(db_session, "datguy1")
+                user = User.find_by_id(db_session, "83460519")
                 user.points = user.points + 1
 
-    def check_run(self):
-        if self.bot.is_online:
-            if self.trivia_running and not self.manualStart:
-                log.debug("Stopping trivia")
-                self.stop_trivia(True)
-        else:
-            if not self.trivia_running:
-                log.debug("Starting trivia")
-                self.start_trivia()
-                self.manualStart = False
+            if self.deadTrivia > 5:
+                self.bot.say("Guys? Anyone here? Sadge")
+                self.trivia_running = False
+                if self.job is not None:
+                    self.job.remove()
+                    self.job = None
 
-    def start_trivia(self, message=None):
-        if self.checkPaused and not self.manualStart:
+    def check_run(self):
+        if self.bot.is_online and self.trivia_running:
+            log.debug("Stopping trivia")
+            self.stop_trivia(True)
+
+    def command_leak(self, **rest):
+        self.leak_answers = not self.leak_answers
+
+    def command_start(self, bot, source, message, **rest):
+        if self.trivia_running:
+            bot.me(f"{source}, a trivia is already running")
+            return
+
+        if bot.is_online:
+            bot.whisper(source, "You can't start a trivia when the stream is live.")
             return
 
         self.trivia_running = True
@@ -332,6 +342,8 @@ class TriviaModule(BaseModule):
             self.point_bounty = int(message)
             if self.point_bounty < 0:
                 self.point_bounty = 0
+            if source.level < 500:
+                self.point_bounty = 20
         except:
             self.point_bounty = self.settings["default_point_bounty"]
 
@@ -342,10 +354,19 @@ class TriviaModule(BaseModule):
 
         HandlerManager.add_handler("on_message", self.on_message)
 
-    def stop_trivia(self, endStep=False):
+    def stop_trivia(self, source=None):
+        if not self.trivia_running and source is not None:
+            self.bot.safe_me(f"{source}, no trivia is active right now")
+            return
+
+        if self.job is not None:
+            self.job.remove()
+            self.job = None
+
         self.trivia_running = False
-        if self.job:
-            self.job.pause()
+
+        self.step_end()
+        self.correct_dict = {}
 
         if self.trivia_running:
             stopOutput = "The trivia has been stopped. The top five participants are: "
@@ -355,38 +376,10 @@ class TriviaModule(BaseModule):
 
             self.bot.safe_me(stopOutput)
 
-        if endStep:
-            self.step_end()
-
-        self.correct_dict = {}
-
         HandlerManager.remove_handler("on_message", self.on_message)
 
-    def command_leak(self, **rest):
-        self.leak_answers = not self.leak_answers
-
-    def command_start(self, bot, source, message, **rest):
-        if self.trivia_running:
-            bot.me(f"{source}, a trivia is already running")
-            return
-
-        self.manualStart = True
-        self.start_trivia(message)
-        self.checkPaused = False
-        self.check_job.resume()
-
     def command_stop(self, bot, source, **rest):
-        if not self.trivia_running:
-            bot.safe_me(f"{source}, no trivia is active right now")
-            return
-
-        if self.job is not None:
-            self.job.remove()
-            self.job = None
-        self.check_job.remove()
-        self.check_job = None
-        self.checkPaused = True
-        self.stop_trivia(True)
+        self.stop_trivia(source=source)
 
     def command_skip(self, bot, **rest):
         if self.question is None:
@@ -401,6 +394,7 @@ class TriviaModule(BaseModule):
         if message is None or whisper or source.ignored:
             return
 
+        self.deadTrivia = 0
         if self.question:
             right_answer = self.question["answer"].lower()
             user_answer = message.lower()
@@ -411,32 +405,20 @@ class TriviaModule(BaseModule):
                 correct = ratio >= 0.86
 
             if correct:
+                sendMessage = f"{source} got the answer right! The answer was {self.question['answer']} FeelsGoodMan"
+
                 if self.point_bounty > 0:
-                    sendMessage = f"{source} got the answer right! The answer was {self.question['answer']} FeelsGoodMan They get {self.point_bounty} points! PogChamp"
-                    source.points += self.point_bounty
-                else:
-                    sendMessage = (
-                        f"{source} got the answer right! The answer was {self.question['answer']} FeelsGoodMan"
-                    )
+                    sendMessage += f" They get {self.point_bounty} points! PogChamp"
+                    source.points = source.points + self.point_bounty
 
                 self.question = None
                 self.step = 0
                 self.last_question = utils.now()
                 self.correct_dict[source.username_raw] = self.correct_dict.get(source.username_raw, 0) + 1
 
-                if "strep" in source.username_raw:
-                    self.streptocuckus += 1
-                    if self.streptocuckus == 6:
-                        self.bot.say(
-                            "streptocarcus you gotta stop. you've been answering trivia almost every hour for the past "
-                            "few weeks. i know it's hard waiting for the next question but this trivia addiction is going "
-                            "to destroy you. please, streptocarcus. its for your own good."
-                        )
-                        self.streptocuckus = 0
-
                 # record winstreak of correct answers for user
 
-                if source.username_raw != self.winstreak:
+                if source != self.winstreak:
                     self.winstreak = 1
                 else:
                     self.winstreak += 1
@@ -455,7 +437,7 @@ class TriviaModule(BaseModule):
             can_execute_with_whisper=True,
             commands={
                 "start": Command.raw_command(
-                    self.command_start, level=420, delay_all=0, delay_user=10, can_execute_with_whisper=True
+                    self.command_start, level=100, delay_all=0, delay_user=60, can_execute_with_whisper=True
                 ),
                 "stop": Command.raw_command(
                     self.command_stop, level=420, delay_all=0, delay_user=0, can_execute_with_whisper=True
@@ -473,15 +455,12 @@ class TriviaModule(BaseModule):
     def enable(self, bot):
         if bot:
             self.check_job = ScheduleManager.execute_every(10, self.check_run)
-            self.checkPaused = False
 
         HandlerManager.add_handler("on_quit", self.stop_trivia)
 
     def disable(self, bot):
         if bot:
-            if self.check_job:
-                self.check_job.remove()
-                self.check_job = None
-            self.checkPaused = True
+            self.check_job.remove()
+            self.check_job = None
 
         HandlerManager.remove_handler("on_quit", self.stop_trivia)

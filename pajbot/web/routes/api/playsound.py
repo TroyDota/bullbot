@@ -41,6 +41,7 @@ class PlaysoundAPI(Resource):
         post_parser.add_argument("volume", type=int, required=True)
         post_parser.add_argument("cooldown", type=int, required=False)
         post_parser.add_argument("cost", type=int, required=False)
+        post_parser.add_argument("tier", type=int, required=False)
         post_parser.add_argument("enabled", type=bool, required=False)
 
         args = post_parser.parse_args()
@@ -64,6 +65,11 @@ class PlaysoundAPI(Resource):
         if not PlaysoundModule.validate_cooldown(cooldown):
             return "Bad cooldown argument", 400
 
+        # tier is allowed to be empty or > 0 but <= 3
+        tier = args.get("tier", None) or None
+        if not PlaysoundModule.validate_tier(tier):
+            return "Bad tier argument", 400
+
         enabled = args["enabled"]
         if enabled is None:
             return "Bad enabled argument", 400
@@ -73,11 +79,13 @@ class PlaysoundAPI(Resource):
 
             if playsound is None:
                 return "Playsound does not exist", 404
+
             # TODO admin audit logs
             playsound.link = link
             playsound.volume = volume
             playsound.cost = cost
             playsound.cooldown = cooldown
+            playsound.tier = tier
             playsound.enabled = enabled
 
             if rename:
@@ -110,7 +118,7 @@ class PlayPlaysoundAPI(Resource):
                 return "Playsound does not exist", 404
             # explicitly don't check for disabled
 
-        if options["user"].username_raw == "dank__doge":
+        if options["user"] == "dank__doge":
             return "Feels Very Weird Man", 403
 
         SocketClientManager.send("playsound.play", {"name": playsound_name})

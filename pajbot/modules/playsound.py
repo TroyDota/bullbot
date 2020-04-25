@@ -115,11 +115,16 @@ class PlaysoundModule(BaseModule):
         self.global_cooldown = False
 
     def play_sound(self, bot, source, message, **rest):
+        playsound_rate = 1.0
         if not message:
             bot.say(f"Playsounds can be tried out at https://{self.bot.bot_domain}/playsounds")
             return False
 
         playsound_name = message.split(" ")[0].lower()
+        try:
+            playsound_rate = min(4.0, max(0.5, float(message.split(" ")[1])))
+        except (IndexError, ValueError):
+            pass
 
         with DBManager.create_session_scope() as session:
             # load playsound from the database
@@ -132,6 +137,11 @@ class PlaysoundModule(BaseModule):
                 )
                 return False
 
+            playsoundTier = playsound.tier or 0
+            if source.tier < playsoundTier and source.level < 500:
+                bot.whisper(source, f"This playsound is specific for tier {playsoundTier} and up subs")
+                return False
+
             if self.global_cooldown and source.username not in ["admiralbulldog", "datguy1"]:
                 if self.settings["global_cd_whisper"]:
                     bot.whisper(
@@ -140,10 +150,7 @@ class PlaysoundModule(BaseModule):
                     )
                 return False
 
-            cooldown = playsound.cooldown
-            if cooldown is None:
-                cooldown = self.settings["default_sample_cd"]
-
+            cooldown = playsound.cooldown or self.settings["default_sample_cd"]
             if playsound_name in self.sample_cooldown and source.username not in ["admiralbulldog", "datguy1"]:
                 bot.whisper(
                     source,
@@ -151,12 +158,15 @@ class PlaysoundModule(BaseModule):
                 )
                 return False
 
-            cost = playsound.cost
-            if cost is None:
-                cost = self.settings["point_cost"]
+            cost = playsound.cost or self.settings["point_cost"]
+            if playsound_rate < 1.0:
+                cost = int(cost * (playsound_rate + 1))
 
             if not source.can_afford(cost):
-                bot.whisper(source, f"You need {cost} points to play this playsound, you have {source.points}.")
+                bot.whisper(
+                    source,
+                    f"You need {cost} points to play this playsound, you have {source.points}. Keep in mind having a lower play rate makes it cost more.",
+                )
                 return False
 
             if not playsound.enabled:
@@ -169,6 +179,7 @@ class PlaysoundModule(BaseModule):
             payload = {
                 "link": playsound.link,
                 "volume": int(round(playsound.volume * self.settings["global_volume"] / 100)),
+                "rate": playsound_rate,
             }
 
             log.debug(f"Playsound module is emitting payload: {json.dumps(payload)}")
@@ -201,7 +212,8 @@ class PlaysoundModule(BaseModule):
         parser.add_argument("--cooldown", dest="cooldown", type=str)
         parser.add_argument("--enabled", dest="enabled", action="store_true")
         parser.add_argument("--disabled", dest="enabled", action="store_false")
-        parser.set_defaults(volume=None, cooldown=None, enabled=None)
+        parser.add_argument("--tier", dest="tier", type=int)
+        parser.set_defaults(volume=None, cooldown=None, enabled=None, tier=None)
 
         try:
             args, unknown = parser.parse_known_args(message.split())
@@ -277,6 +289,30 @@ class PlaysoundModule(BaseModule):
         return True
 
     @staticmethod
+    def validate_tier(tier):
+        return tier is None or tier > 0 and tier <= 3
+
+    def update_tier(self, bot, source, playsound, parsed_options):
+        if "tier" in parsed_options:
+            tier = parsed_options["tier"]
+            if bool(tier) is False:
+                tier = None
+            else:
+                try:
+                    tier = int(parsed_options["tier"])
+                except ValueError:
+                    bot.whisper(source, "Error: Tier must be a number or empty.")
+                    return False
+
+            if not self.validate_tier(tier):
+                bot.whisper(source, "Error: Tier must be > 0 and <= 3 or empty.")
+                return False
+
+            playsound.tier = tier
+
+        return True
+
+    @staticmethod
     def validate_cost(cost):
         return cost is None or cost >= 0
 
@@ -347,6 +383,9 @@ class PlaysoundModule(BaseModule):
             if not self.update_cost(bot, source, playsound, options):
                 return
 
+            if not self.update_tier(bot, source, playsound, options):
+                return
+
             if not self.update_cooldown(bot, source, playsound, options):
                 return
 
@@ -392,6 +431,9 @@ class PlaysoundModule(BaseModule):
                 return
 
             if not self.update_cost(bot, source, playsound, options):
+                return
+
+            if not self.update_tier(bot, source, playsound, options):
                 return
 
             if not self.update_cooldown(bot, source, playsound, options):
@@ -444,7 +486,7 @@ class PlaysoundModule(BaseModule):
 
             bot.whisper(
                 source,
-                f"name={playsound.name}, link={playsound.link}, volume={playsound.volume}, cooldown={playsound.cooldown}, enabled={playsound.enabled}",
+                f"name={playsound.name}, link={playsound.link}, volume={playsound.volume}, cooldown={playsound.cooldown}, tier={playsound.tier}, enabled={playsound.enabled}",
             )
 
     def load_commands(self, **options):

@@ -42,7 +42,7 @@ $(window).on('load', function() {
             min: 0,
             max: 100,
             start: start,
-            step: 5,
+            step: 1,
             onChange: function(value, meta) {
                 if (!meta.triggeredByUser) {
                     return;
@@ -82,7 +82,8 @@ $(window).on('load', function() {
                 if (
                     item.name === 'volume' ||
                     item.name === 'cost' ||
-                    item.name === 'cooldown'
+                    item.name === 'cooldown' ||
+                    item.name === 'tier'
                 ) {
                     let val = parseInt(item.value);
                     if (isNaN(val)) {

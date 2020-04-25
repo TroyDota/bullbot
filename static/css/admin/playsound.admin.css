@@ -31,6 +31,10 @@
     width: 100px;
 }
 
+.tier-input {
+    width: 50px;
+}
+
 .audio-section {
     display: flex;
     flex-direction: column;

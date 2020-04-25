@@ -13,5 +13,6 @@ class Playsound(Base):
     # from 0 to 100
     volume = Column(INT, nullable=False, default=100)
     cost = Column(INT, nullable=True)
+    tier = Column(INT, nullable=True)
     cooldown = Column(INT, nullable=True)
     enabled = Column(BOOLEAN, nullable=False, default=True)

@@ -15,7 +15,35 @@ $(document).ready(function() {
 });
 
 let donoQueue = [];
+let highlightQueue = [];
 let fadeOutTimer = null;
+let notificationMessage = null;
+let playAudio = new Audio();
+playAudio.volume = 0.3; // Object initialiser?
+
+playAudio.addEventListener('canplaythrough', function() {
+    setTimeout(function() {
+        playAudio.play();
+    }, 1000);
+});
+
+playAudio.addEventListener('ended', function() {
+    var currentNotif = notificationMessage;
+    setTimeout(function() {
+        currentNotif.textillate('out');
+        currentNotif.animate(
+            {
+                height: 0,
+                opacity: 0,
+            },
+            1000
+        );
+
+        if (highlightQueue.length > 0) {
+            PlayHighlights();
+        }
+    }, 2000);
+});
 
 function add_random_box({ color }) {
     var divsize = 50;
@@ -145,10 +173,10 @@ function show_custom_image(data) {
 
 var message_id = 0;
 
-function add_notification({ message, length }) {
-    var new_notification = $('<div>' + message + '</div>').prependTo(
-        'div.notifications'
-    );
+function add_notification({ message, length, extra_classes }) {
+    var new_notification = $(
+        `<div class="${extra_classes}">${message}</div>`
+    ).prependTo('div.notifications');
     new_notification.textillate({
         autostart: false,
         in: {
@@ -184,6 +212,8 @@ function add_notification({ message, length }) {
             new_notification.remove();
         }, 250);
     });
+
+    return new_notification;
 }
 
 function refresh_combo_count(count) {
@@ -335,20 +365,24 @@ function NextDonation() {
             return;
         }
 
-        var currentDono = donoQueue.pop();
+        var currentDono = donoQueue.shift();
 
-        clearTimeout(fadeOutTimer);
-        $('#donations')
-            .stop()
-            .fadeIn();
         $('#donoVideo').attr('src', currentDono.media);
         $('#donoVideo')[0].load();
         $('#donoHeader').html(
             `<span class="green">${currentDono.author}</span> just donated <span class="green">${currentDono.amount}</span>`
         );
         $('#donoText').text(currentDono.text);
-        $('#donations').fadeIn('slow', function() {
-            $('#donoVideo')[0].play();
+
+        $('#donoVideo').on('loadeddata', function() {
+            clearTimeout(fadeOutTimer);
+            $('#donations')
+                .stop()
+                .fadeIn();
+
+            $('#donations').fadeIn('slow', function() {
+                $('#donoVideo')[0].play();
+            });
         });
     }, 5000);
 }
@@ -362,6 +396,47 @@ function ProcessDonations() {
 function receive_donation(data) {
     donoQueue.push(data);
     ProcessDonations();
+}
+
+function PlayHighlights() {
+    if (!playAudio.ended && playAudio.src != '') {
+        return;
+    }
+
+    var currentHighlight = highlightQueue.shift();
+    playAudio.src = 'data:audio/mp3;base64,' + currentHighlight.speech;
+    playAudio.load();
+
+    // playAudio.duration is sometimes infinite for some reason
+    notificationMessage = add_notification({
+        message: `<span class="user">${currentHighlight.user}</span> <span style="color: orange;">(${currentHighlight.voice})</span>: ${currentHighlight.message}`,
+        length: 500,
+        extra_classes: 'tts',
+    });
+}
+
+function receive_highlight(data) {
+    highlightQueue.push(data);
+    if (highlightQueue.length == 1) {
+        PlayHighlights();
+    }
+}
+
+function skip_highlight() {
+    playAudio.pause();
+    playAudio.removeAttribute('src');
+    notificationMessage.textillate('out');
+    notificationMessage.animate(
+        {
+            height: 0,
+            opacity: 0,
+        },
+        1000
+    );
+
+    if (highlightQueue.length > 0) {
+        PlayHighlights();
+    }
 }
 
 function start_emote_counter({ emote1, emote2 }) {
@@ -472,10 +547,11 @@ function bet_close_bet() {
     });
 }
 
-function play_sound({ link, volume }) {
+function play_sound({ link, volume, rate }) {
     let player = new Howl({
         src: [link],
         volume: volume * 0.01, // the given volume is between 0 and 100
+        rate: rate,
         onend: () => console.log('Playsound audio finished playing'),
         onloaderror: e => console.warn('audio load error', e),
         onplayerror: e => console.warn('audio play error', e),
@@ -519,10 +595,17 @@ function handleWebsocketData(json_data) {
             });
             break;
         case 'play_sound':
+            !('rate' in data) && (data.rate = 1.0);
             play_sound(data);
             break;
         case 'donation':
             receive_donation(data);
+            break;
+        case 'highlight':
+            receive_highlight(data);
+            break;
+        case 'skip_highlight':
+            skip_highlight();
             break;
         case 'emote_combo':
             refresh_emote_combo(data);

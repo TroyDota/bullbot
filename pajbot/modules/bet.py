@@ -23,9 +23,7 @@ class BetModule(BaseModule):
     DESCRIPTION = "Enables betting on games with !bet"
     CATEGORY = "Game"
 
-    SETTINGS = [
-        ModuleSetting(key="max_bet", label="Maximum bet", type="number", placeholder="", default="3000"),
-    ]
+    SETTINGS = [ModuleSetting(key="max_bet", label="Maximum bet", type="number", placeholder="", default="3000")]
 
     def __init__(self, bot):
         super().__init__(bot)
@@ -308,7 +306,7 @@ class BetModule(BaseModule):
             if not self.spectating:
                 bot.websocket_manager.emit("bet_update_data", data=payload)
 
-            finishString = f"You have bet {points} points on this game resulting in a {'radiant' if self.spectating else ''}{bet_for.name}"
+            finishString = f"You have bet {points} points on this game resulting in a {'radiant ' if self.spectating else ''}{bet_for.name}"
 
             bot.whisper(source, finishString)
 

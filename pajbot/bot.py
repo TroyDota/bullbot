@@ -36,9 +36,9 @@ from pajbot.managers.handler import HandlerManager
 from pajbot.managers.irc import IRCManager
 from pajbot.managers.kvi import KVIManager
 from pajbot.managers.redis import RedisManager
-from pajbot.managers.discord_bot import DiscordBotManager
 from pajbot.managers.schedule import ScheduleManager
 from pajbot.managers.twitter import TwitterManager, PBTwitterManager
+from pajbot.managers.pubsub import PubSubManager
 from pajbot.managers.user_ranks_refresh import UserRanksRefreshManager
 from pajbot.managers.websocket import WebSocketManager
 from pajbot.managers.spotify_streamlabs_manager import SpotifyStreamLabsManager
@@ -64,6 +64,8 @@ URL_REGEX = re.compile(
     r"\(?(?:(http|https):\/\/)?(?:((?:[^\W\s]|\.|-|[:]{1})+)@{1})?((?:www.)?(?:[^\W\s]|\.|-)+[\.][^\W\s]{2,4}|localhost(?=\/)|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(?::(\d*))?([\/]?[^\s\?]*[\/]{1})*(?:\/?([^\s\n\?\[\]\{\}\#]*(?:(?=\.)){1}|[^\s\n\?\[\]\{\}\.\#]*)?([\.]{1}[^\s\?\#]*)?)?(?:\?{1}([^\s\n\#\[\]]*))?([\#][^\s\n]*)?\)?",
     re.IGNORECASE,
 )
+
+SLICE_REGEX = re.compile(r"(-?\d+)?(:?(-?\d+)?)?")
 
 
 class Bot:
@@ -235,13 +237,13 @@ class Bot:
             self.twitter_manager = PBTwitterManager(self)
         else:
             self.twitter_manager = TwitterManager(self)
-        self.discord_bot_manager = DiscordBotManager(self, RedisManager.get())
         self.module_manager = ModuleManager(self.socket_manager, bot=self).load()
         self.commands = CommandManager(
             socket_manager=self.socket_manager, module_manager=self.module_manager, bot=self
         ).load()
         self.spotify_streamlabs_manager = SpotifyStreamLabsManager(self)
         self.websocket_manager = WebSocketManager(self, self.config["websocket"]["external_password"])
+        self.pubsub_manager = PubSubManager(self)
 
         HandlerManager.trigger("on_managers_loaded")
 
@@ -674,11 +676,14 @@ class Bot:
 
         emote_tag = tags["emotes"]
         msg_id = tags.get("id", None)  # None on whispers!
+        badges_string = tags.get("badges", "")
+        badges = dict((badge.split("/") for badge in badges_string.split(",") if badge != ""))
 
         if not whisper and event.target == self.channel:
             # Moderator or broadcaster, both count
             source.moderator = tags["mod"] == "1" or source.id == self.streamer_user_id
-            source.subscriber = tags["subscriber"] == "1"
+            # Having the founder badge means that the subscriber tag is set to 0. Therefore it's more stable to just check badges
+            source.subscriber = "founder" in badges or "subscriber" in badges
 
         if not whisper and source.banned:
             self.ban(
@@ -847,6 +852,7 @@ class Bot:
 
         self.twitter_manager.quit()
         self.socket_manager.quit()
+        self.pubsub_manager.quit()
 
         sys.exit(0)
 
@@ -870,6 +876,7 @@ class Bot:
             "or_else": _filter_or_else,
             "or_broadcaster": self._filter_or_broadcaster,
             "or_streamer": self._filter_or_broadcaster,
+            "slice": _filter_slice,
         }
         if f.name in available_filters:
             return available_filters[f.name](resp, f.arguments)
@@ -936,3 +943,27 @@ def _filter_or_else(var, args):
         return args[0]
     else:
         return var
+
+
+def _filter_slice(var, args):
+    m = SLICE_REGEX.match(args[0])
+    if m:
+        groups = m.groups()
+        if groups[0] is not None and groups[2] is None:
+            if groups[1] is None:
+                # 0
+                return var[slice(int(groups[0]), int(groups[0]) + 1)]
+
+            # 0:
+            return var[slice(int(groups[0]), None)]
+        if groups[0] is not None and groups[2] is not None:
+            # 0:0
+            return var[slice(int(groups[0]), int(groups[2]))]
+
+        if groups[0] is None and groups[2] is not None:
+            # :0
+            return var[slice(int(groups[2]))]
+
+        return var
+
+    return var

@@ -170,7 +170,7 @@ class RaffleModule(BaseModule):
     def load_commands(self, **options):
         self.commands["singleraffle"] = Command.raw_command(
             self.raffle,
-            delay_all=7200,
+            delay_all=30,
             delay_user=0,
             level=500,
             description="Start a raffle for points",
@@ -210,7 +210,7 @@ class RaffleModule(BaseModule):
         if self.settings["multi_enabled"]:
             self.commands["multiraffle"] = Command.raw_command(
                 self.multi_raffle,
-                delay_all=7200,
+                delay_all=30,
                 delay_user=0,
                 level=500,
                 description="Start a multi-raffle for points",
